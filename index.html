@@ -6,102 +6,105 @@
 <title>MarkaIQ — Türk Markalar İçin AI Stratejist</title>
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0a0f;--surface:#111118;--border:#2a2a38;--accent:#ff4d00;--accent2:#ff8c42;--gold:#f5c842;--text:#f0eff8;--muted:#7a7a96;--success:#2ecc71;}
+:root{--bg:#f5f3ee;--surface:#ffffff;--border:#e0ddd6;--accent:#ff4d00;--accent2:#ff6a1f;--text:#1a1814;--muted:#888077;--success:#1a9e5c;--card:#faf8f4;}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
-.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;position:relative;}
-.hero::before{content:'';position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(ellipse,rgba(255,77,0,0.15) 0%,transparent 70%);pointer-events:none;}
-.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,77,0,0.1);border:1px solid rgba(255,77,0,0.3);border-radius:100px;padding:6px 16px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);margin-bottom:32px;}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-300px;left:50%;transform:translateX(-50%);width:800px;height:800px;background:radial-gradient(ellipse,rgba(255,77,0,0.08) 0%,transparent 70%);pointer-events:none;}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:var(--border);}
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,77,0,0.08);border:1px solid rgba(255,77,0,0.2);border-radius:100px;padding:6px 16px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);margin-bottom:32px;}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-h1{font-family:'Unbounded',sans-serif;font-size:clamp(36px,7vw,80px);font-weight:900;line-height:1.05;letter-spacing:-2px;margin-bottom:20px;}
+h1{font-family:'Unbounded',sans-serif;font-size:clamp(36px,7vw,80px);font-weight:900;line-height:1.05;letter-spacing:-2px;margin-bottom:20px;color:var(--text);}
 .accent{color:var(--accent);}
-.outline{-webkit-text-stroke:1px rgba(240,239,248,0.3);color:transparent;}
+.outline{-webkit-text-stroke:1.5px rgba(26,24,20,0.2);color:transparent;}
 .subtitle{font-size:17px;color:var(--muted);max-width:540px;line-height:1.7;margin-bottom:48px;font-weight:300;}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:620px;position:relative;box-shadow:0 40px 80px rgba(0,0,0,0.6);}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,77,0,0.5),transparent);}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:32px;width:100%;max-width:640px;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.08);}
 .lbl{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:block;font-weight:500;}
-.row{display:flex;gap:12px;}
-input[type=url]{flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:12px;padding:14px 18px;font-size:15px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
-input[type=url]:focus{border-color:var(--accent);}
+.row{display:flex;gap:10px;}
+input[type=url]{flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:14px;padding:14px 18px;font-size:15px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;}
+input[type=url]:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,77,0,0.1);}
 input[type=url]::placeholder{color:var(--muted);}
-.btn{background:var(--accent);border:none;border-radius:12px;padding:14px 24px;font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;transition:transform .15s,box-shadow .15s;}
-.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,77,0,0.4);}
+.btn{background:var(--accent);border:none;border-radius:14px;padding:14px 24px;font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;transition:transform .15s,box-shadow .15s;}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,77,0,0.3);}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
-.err{background:rgba(255,77,0,0.1);border:1px solid rgba(255,77,0,0.3);border-radius:12px;padding:14px 18px;font-size:13px;color:var(--accent2);margin-top:16px;display:none;word-break:break-all;}
+.err{background:rgba(255,77,0,0.06);border:1px solid rgba(255,77,0,0.2);border-radius:12px;padding:12px 16px;font-size:13px;color:var(--accent);margin-top:14px;display:none;word-break:break-all;}
 .hint{margin-top:14px;font-size:13px;color:var(--muted);text-align:center;}
+
 #loader{display:none;padding:60px 24px;text-align:center;max-width:620px;margin:0 auto;}
-.orb{width:80px;height:80px;border-radius:50%;margin:0 auto 28px;background:conic-gradient(from 0deg,var(--accent),var(--accent2),var(--gold),var(--accent));animation:spin 1.4s linear infinite;position:relative;}
+.orb{width:72px;height:72px;border-radius:50%;margin:0 auto 28px;background:conic-gradient(from 0deg,var(--accent),#ffb347,#ff6a1f,var(--accent));animation:spin 1.4s linear infinite;position:relative;}
 .orb::after{content:'';position:absolute;inset:4px;border-radius:50%;background:var(--bg);}
 @keyframes spin{to{transform:rotate(360deg)}}
-.steps{list-style:none;text-align:left;margin-top:24px;}
+.steps{list-style:none;text-align:left;margin-top:24px;max-width:400px;margin-left:auto;margin-right:auto;}
 .steps li{padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--muted);display:flex;align-items:center;gap:12px;}
 .steps li.done{color:var(--success);}
-.steps li.active{color:var(--text);}
+.steps li.active{color:var(--text);font-weight:500;}
 .sdot{width:8px;height:8px;border-radius:50%;background:var(--border);flex-shrink:0;}
 li.done .sdot{background:var(--success);}
 li.active .sdot{background:var(--accent);animation:pulse 1s infinite;}
-#results{display:none;max-width:900px;margin:0 auto;padding:0 24px 80px;}
-.rh{text-align:center;padding:48px 0 40px;border-bottom:1px solid var(--border);margin-bottom:40px;}
-.rh h2{font-family:'Unbounded',sans-serif;font-size:clamp(22px,4vw,36px);font-weight:700;margin-bottom:8px;}
-.utag{display:inline-block;background:rgba(255,77,0,0.1);border:1px solid rgba(255,77,0,0.25);border-radius:100px;padding:4px 14px;font-size:13px;color:var(--accent2);}
-.scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:40px;}
-.sc{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:16px;padding:24px 20px;text-align:center;position:relative;overflow:hidden;}
-.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-.sc.o::before{background:var(--accent);}
-.sc.g::before{background:var(--gold);}
-.sc.b::before{background:#4da6ff;}
-.sc.gr::before{background:var(--success);}
-.snum{font-family:'Unbounded',sans-serif;font-size:40px;font-weight:900;line-height:1;margin-bottom:6px;}
+
+#results{display:none;max-width:960px;margin:0 auto;padding:0 24px 80px;}
+.rh{text-align:center;padding:56px 0 48px;border-bottom:1px solid var(--border);margin-bottom:48px;}
+.rh h2{font-family:'Unbounded',sans-serif;font-size:clamp(24px,4vw,40px);font-weight:900;margin-bottom:10px;}
+.utag{display:inline-block;background:rgba(255,77,0,0.07);border:1px solid rgba(255,77,0,0.2);border-radius:100px;padding:5px 16px;font-size:13px;color:var(--accent);}
+.scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:48px;}
+.sc{background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:28px 20px;text-align:center;position:relative;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.04);}
+.sc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
+.sc.o::after{background:var(--accent);}
+.sc.g::after{background:#f5a623;}
+.sc.b::after{background:#2d7dd2;}
+.sc.gr::after{background:var(--success);}
+.snum{font-family:'Unbounded',sans-serif;font-size:44px;font-weight:900;line-height:1;margin-bottom:8px;}
 .sc.o .snum{color:var(--accent);}
-.sc.g .snum{color:var(--gold);}
-.sc.b .snum{color:#4da6ff;}
+.sc.g .snum{color:#f5a623;}
+.sc.b .snum{color:#2d7dd2;}
 .sc.gr .snum{color:var(--success);}
-.slbl{font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-weight:500;}
-.sec{margin-bottom:36px;}
-.stitle{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:10px;}
-.stitle::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
-.acard{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:16px;padding:28px;line-height:1.8;font-size:15px;color:#ccc;}
-.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;}
-.pi{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:16px;padding:22px;transition:border-color .2s,transform .2s;}
-.pi:hover{border-color:var(--accent);transform:translateY(-3px);}
-.ptag{font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700;padding:3px 10px;border-radius:100px;display:inline-block;margin-bottom:12px;}
-.tv{background:rgba(255,77,0,0.15);color:var(--accent2);}
-.ti{background:rgba(77,166,255,0.15);color:#4da6ff;}
-.tc{background:rgba(245,200,66,0.15);color:var(--gold);}
-.ts{background:rgba(46,204,113,0.15);color:var(--success);}
-.tt{background:rgba(180,77,255,0.15);color:#b44dff;}
-.pi h4{font-size:15px;font-weight:600;margin-bottom:6px;}
-.pi p{font-size:13px;color:var(--muted);line-height:1.6;}
+.slbl{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-weight:600;}
+.sec{margin-bottom:40px;}
+.stitle{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:20px;display:flex;align-items:center;gap:12px;}
+.stitle::after{content:'';flex:1;height:1px;background:var(--border);}
+.acard{background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:28px;line-height:1.85;font-size:15px;color:var(--text);box-shadow:0 2px 12px rgba(0,0,0,0.04);}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+.pi{background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:22px;transition:border-color .2s,transform .2s,box-shadow .2s;box-shadow:0 2px 8px rgba(0,0,0,0.04);}
+.pi:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 8px 24px rgba(255,77,0,0.1);}
+.ptag{font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700;padding:4px 12px;border-radius:100px;display:inline-block;margin-bottom:14px;}
+.tv{background:rgba(255,77,0,0.08);color:var(--accent);}
+.ti{background:rgba(45,125,210,0.08);color:#2d7dd2;}
+.tc{background:rgba(245,166,35,0.1);color:#c8821a;}
+.ts{background:rgba(26,158,92,0.08);color:var(--success);}
+.tt{background:rgba(140,77,200,0.08);color:#8c4dc8;}
+.pi h4{font-size:14px;font-weight:600;margin-bottom:6px;color:var(--text);}
+.pi p{font-size:13px;color:var(--muted);line-height:1.65;}
 .dtabs{display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px;}
-.dtab{background:transparent;border:1px solid var(--border);border-radius:100px;padding:8px 18px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .2s;}
-.dtab.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
-.dday{display:none;flex-direction:column;gap:12px;}
+.dtab{background:transparent;border:1.5px solid var(--border);border-radius:100px;padding:8px 20px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .2s;font-weight:500;}
+.dtab.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
+.dday{display:none;flex-direction:column;gap:10px;}
 .dday.active{display:flex;}
-.idea{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:18px 22px;display:flex;align-items:flex-start;gap:16px;transition:border-color .2s;}
-.idea:hover{border-color:rgba(255,77,0,0.4);}
-.inum{width:32px;height:32px;flex-shrink:0;background:rgba(255,77,0,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;color:var(--accent);}
-.ic h5{font-size:14px;font-weight:600;margin-bottom:4px;}
+.idea{background:var(--surface);border:1.5px solid var(--border);border-radius:16px;padding:18px 22px;display:flex;align-items:flex-start;gap:16px;transition:border-color .2s,box-shadow .2s;box-shadow:0 2px 8px rgba(0,0,0,0.03);}
+.idea:hover{border-color:rgba(255,77,0,0.3);box-shadow:0 4px 16px rgba(255,77,0,0.07);}
+.inum{width:32px;height:32px;flex-shrink:0;background:rgba(255,77,0,0.08);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;color:var(--accent);}
+.ic h5{font-size:14px;font-weight:600;margin-bottom:4px;color:var(--text);}
 .ic p{font-size:13px;color:var(--muted);line-height:1.6;}
 .imeta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
-.chip{font-size:11px;padding:2px 10px;border-radius:100px;border:1px solid var(--border);color:var(--muted);}
-.hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
-.hcard{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:16px;padding:24px;position:relative;overflow:hidden;transition:transform .2s;}
-.hcard:hover{transform:translateY(-2px);}
-.hcard::before{content:'\275D';position:absolute;top:16px;right:20px;font-size:48px;color:rgba(255,77,0,0.08);font-family:serif;line-height:1;}
+.chip{font-size:11px;padding:3px 10px;border-radius:100px;border:1px solid var(--border);color:var(--muted);background:var(--bg);}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;}
+.hcard{background:var(--surface);border:1.5px solid var(--border);border-radius:18px;padding:24px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;box-shadow:0 2px 8px rgba(0,0,0,0.04);}
+.hcard:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.08);}
+.hcard::before{content:'\275D';position:absolute;top:12px;right:18px;font-size:52px;color:rgba(255,77,0,0.06);font-family:serif;line-height:1;}
 .htype{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
-.htext{font-size:15px;line-height:1.65;font-weight:500;}
-.hwhy{margin-top:12px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);padding-top:10px;}
-.cpbtn{margin-top:12px;background:transparent;border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
+.htext{font-size:15px;line-height:1.7;font-weight:500;color:var(--text);}
+.hwhy{margin-top:12px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);padding-top:10px;line-height:1.6;}
+.cpbtn{margin-top:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px 14px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;font-weight:500;}
 .cpbtn:hover{border-color:var(--accent);color:var(--accent);}
-.cpbtn.ok{border-color:var(--success);color:var(--success);}
+.cpbtn.ok{border-color:var(--success);color:var(--success);background:rgba(26,158,92,0.05);}
 .vlist{display:flex;flex-direction:column;gap:12px;}
-.vi{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:0 14px 14px 0;padding:18px 22px;}
-.vp{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);margin-bottom:8px;}
-.vt{font-size:14px;line-height:1.7;}
+.vi{background:var(--surface);border:1.5px solid var(--border);border-left:4px solid var(--accent);border-radius:0 18px 18px 0;padding:20px 24px;box-shadow:0 2px 8px rgba(0,0,0,0.04);}
+.vp{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
+.vt{font-size:14px;line-height:1.75;color:var(--text);}
 .cta{text-align:center;padding:40px;margin-top:40px;border-top:1px solid var(--border);}
-.rbtn{background:transparent;border:1px solid var(--border);border-radius:12px;padding:12px 28px;font-family:'Unbounded',sans-serif;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;letter-spacing:1px;}
+.rbtn{background:transparent;border:1.5px solid var(--border);border-radius:14px;padding:12px 28px;font-family:'Unbounded',sans-serif;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;letter-spacing:1.5px;}
 .rbtn:hover{border-color:var(--accent);color:var(--accent);}
+@media(max-width:600px){.row{flex-direction:column;}.btn{width:100%;}}
 </style>
 </head>
 <body>
@@ -117,18 +120,18 @@ li.active .sdot{background:var(--accent);animation:pulse 1s infinite;}
       <button class="btn" id="analyzeBtn">Markamı Analiz Et →</button>
     </div>
     <div class="err" id="errMsg"></div>
-    <p class="hint">Türkiye'deki 500+ markaya özel içerik stratejisi üretildi</p>
+    <p class="hint">Web siteni gerçekten ziyaret ederek analiz eder</p>
   </div>
 </div>
 
 <div id="loader">
   <div class="orb"></div>
-  <div style="font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;margin-bottom:8px;">Marka Analiz Ediliyor</div>
+  <div style="font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text);">Marka Analiz Ediliyor</div>
   <div style="color:var(--muted);font-size:14px;margin-bottom:24px;" id="loaderUrl"></div>
   <ul class="steps">
-    <li id="s1"><div class="sdot"></div>Web sitesi taranıyor</li>
-    <li id="s2"><div class="sdot"></div>Marka kimliği analiz ediliyor</li>
-    <li id="s3"><div class="sdot"></div>Hedef kitle belirleniyor</li>
+    <li id="s1"><div class="sdot"></div>Web sitesi ziyaret ediliyor</li>
+    <li id="s2"><div class="sdot"></div>İçerik ve ürünler okunuyor</li>
+    <li id="s3"><div class="sdot"></div>Marka kimliği analiz ediliyor</li>
     <li id="s4"><div class="sdot"></div>İçerik stratejisi oluşturuluyor</li>
     <li id="s5"><div class="sdot"></div>Viral hooklar yazılıyor</li>
     <li id="s6"><div class="sdot"></div>İçerik takvimi hazırlanıyor</li>
@@ -140,7 +143,6 @@ li.active .sdot{background:var(--accent);animation:pulse 1s infinite;}
 <script>
 const API_KEY = "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";
 const STEPS = ["s1","s2","s3","s4","s5","s6"];
-const DAYS = ["Pazartesi","Salı","Çarşamba","Perşembe","Cuma"];
 
 document.getElementById("analyzeBtn").addEventListener("click", startAnalysis);
 document.getElementById("urlInput").addEventListener("keydown", function(e){ if(e.key==="Enter") startAnalysis(); });
@@ -164,11 +166,21 @@ async function startAnalysis(){
     if(idx>0){ var p=document.getElementById(STEPS[idx-1]); p.classList.remove("active"); p.classList.add("done"); }
     if(idx<STEPS.length){ document.getElementById(STEPS[idx]).classList.add("active"); idx++; }
     else clearInterval(timer);
-  },900);
-
-  var sys = "Sen Türkiye markalar için sosyal medya stratejistisin. Sadece JSON döndür, başka hiçbir şey yazma, markdown veya kod bloğu kullanma. Şu JSON formatında yanıt ver: {\"brandName\":\"...\",\"sector\":\"...\",\"shortAnalysis\":\"...\",\"scores\":{\"contentScore\":75,\"viralPotential\":70,\"socialPresence\":60,\"growthOpportunity\":80},\"contentPlan\":[{\"type\":\"video\",\"title\":\"...\",\"desc\":\"...\"},{\"type\":\"image\",\"title\":\"...\",\"desc\":\"...\"},{\"type\":\"carousel\",\"title\":\"...\",\"desc\":\"...\"},{\"type\":\"story\",\"title\":\"...\",\"desc\":\"...\"}],\"dailyIdeas\":{\"Pazartesi\":[{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Reels\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"TikTok\",\"format\":\"Video\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Story\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Post\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"YouTube\",\"format\":\"Short\"}],\"Salı\":[{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Reels\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"TikTok\",\"format\":\"Video\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Carousel\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"X\",\"format\":\"Post\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Story\"}],\"Carsamba\":[{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Reels\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"TikTok\",\"format\":\"Video\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Post\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"YouTube\",\"format\":\"Short\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Story\"}],\"Persembe\":[{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Reels\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"TikTok\",\"format\":\"Video\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Carousel\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Story\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"X\",\"format\":\"Post\"}],\"Cuma\":[{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Reels\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"TikTok\",\"format\":\"Video\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Post\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"YouTube\",\"format\":\"Short\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Story\"}]},\"viralHooks\":[{\"type\":\"Merak Uyandiran\",\"text\":\"...\",\"why\":\"...\"},{\"type\":\"Problem-Cozum\",\"text\":\"...\",\"why\":\"...\"},{\"type\":\"Sosyal Kanit\",\"text\":\"...\",\"why\":\"...\"},{\"type\":\"POV Hikaye\",\"text\":\"...\",\"why\":\"...\"},{\"type\":\"Sok Gercek\",\"text\":\"...\",\"why\":\"...\"},{\"type\":\"Rakam Veri\",\"text\":\"...\",\"why\":\"...\"}],\"viralTexts\":[{\"platform\":\"Instagram Caption\",\"text\":\"...\"},{\"platform\":\"TikTok Aciklamasi\",\"text\":\"...\"},{\"platform\":\"Reklam Metni Meta\",\"text\":\"...\"}]}";
+  },1200);
 
   try {
+    // Step 1: Fetch website content via Jina AI
+    var jinaUrl = "https://r.jina.ai/" + url;
+    var jinaResp = await fetch(jinaUrl, {
+      headers: { "Accept": "text/plain", "X-No-Cache": "true" }
+    });
+    var siteContent = await jinaResp.text();
+    // Limit to first 3000 chars to avoid token overflow
+    siteContent = siteContent.substring(0, 3000);
+
+    // Step 2: Analyze with Claude
+    var sys = "Sen Türkiye'deki markalar için uzmanlaşmış bir sosyal medya stratejisti ve içerik üreticisisin. Sana bir web sitesinin içeriği verilecek. Bu içeriği analiz ederek markayı tanı ve strateji üret. Yanıtını YALNIZCA geçerli JSON olarak döndür, başka hiçbir şey yazma, markdown veya kod bloğu kullanma. Şu JSON formatında yanıt ver: {\"brandName\":\"...\",\"sector\":\"...\",\"shortAnalysis\":\"3-4 cümle marka analizi\",\"scores\":{\"contentScore\":75,\"viralPotential\":70,\"socialPresence\":60,\"growthOpportunity\":80},\"contentPlan\":[{\"type\":\"video\",\"title\":\"...\",\"desc\":\"...\"},{\"type\":\"image\",\"title\":\"...\",\"desc\":\"...\"},{\"type\":\"carousel\",\"title\":\"...\",\"desc\":\"...\"},{\"type\":\"story\",\"title\":\"...\",\"desc\":\"...\"}],\"dailyIdeas\":{\"Pazartesi\":[{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Reels\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"TikTok\",\"format\":\"Video\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Story\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Post\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"YouTube\",\"format\":\"Short\"}],\"Sali\":[{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Reels\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"TikTok\",\"format\":\"Video\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Carousel\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"X\",\"format\":\"Post\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Story\"}],\"Carsamba\":[{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Reels\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"TikTok\",\"format\":\"Video\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Post\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"YouTube\",\"format\":\"Short\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Story\"}],\"Persembe\":[{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Reels\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"TikTok\",\"format\":\"Video\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Carousel\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Story\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"X\",\"format\":\"Post\"}],\"Cuma\":[{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Reels\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"TikTok\",\"format\":\"Video\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Post\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"YouTube\",\"format\":\"Short\"},{\"title\":\"...\",\"desc\":\"...\",\"platform\":\"Instagram\",\"format\":\"Story\"}]},\"viralHooks\":[{\"type\":\"Merak Uyandiran\",\"text\":\"...\",\"why\":\"...\"},{\"type\":\"Problem-Cozum\",\"text\":\"...\",\"why\":\"...\"},{\"type\":\"Sosyal Kanit\",\"text\":\"...\",\"why\":\"...\"},{\"type\":\"POV Hikaye\",\"text\":\"...\",\"why\":\"...\"},{\"type\":\"Sok Gercek\",\"text\":\"...\",\"why\":\"...\"},{\"type\":\"Rakam Veri\",\"text\":\"...\",\"why\":\"...\"}],\"viralTexts\":[{\"platform\":\"Instagram Caption\",\"text\":\"...\"},{\"platform\":\"TikTok Aciklamasi\",\"text\":\"...\"},{\"platform\":\"Reklam Metni Meta\",\"text\":\"...\"}]}";
+
     var resp = await fetch("https://api.anthropic.com/v1/messages",{
       method:"POST",
       headers:{
@@ -181,7 +193,7 @@ async function startAnalysis(){
         model:"claude-sonnet-4-20250514",
         max_tokens:4000,
         system: sys,
-        messages:[{role:"user",content:"Bu URL için marka analizi yap: "+url+". Markayı URL'den çıkar, Türkiye pazarına özel içerik üret."}]
+        messages:[{role:"user",content:"Web sitesi URL: "+url+"\n\nWeb sitesi içeriği:\n"+siteContent+"\n\nBu içeriği analiz ederek Türkiye pazarına özel sosyal medya stratejisi üret."}]
       })
     });
 
@@ -198,7 +210,7 @@ async function startAnalysis(){
     raw = raw.replace(/```json/g,"").replace(/```/g,"").trim();
     var parsed = JSON.parse(raw);
 
-    setTimeout(function(){ document.getElementById("loader").style.display="none"; renderResults(parsed,url); },800);
+    setTimeout(function(){ document.getElementById("loader").style.display="none"; renderResults(parsed,url); },600);
 
   } catch(err) {
     clearInterval(timer);
@@ -222,7 +234,7 @@ function renderResults(d,url){
 
   var di=d.dailyIdeas||{};
   var dayKeys=Object.keys(di);
-  var tabsHTML=dayKeys.map(function(d,i){ return '<button class="dtab'+(i===0?" active":"")+'\" onclick="switchDay('+i+')">'+d+'</button>'; }).join("");
+  var tabsHTML=dayKeys.map(function(day,i){ return '<button class="dtab'+(i===0?" active":"")+'\" onclick="switchDay('+i+')">'+day+'</button>'; }).join("");
   var daysHTML=dayKeys.map(function(day,di2){
     var ideas=di[day]||[];
     return '<div class="dday'+(di2===0?" active":"")+'\" id="dp_'+di2+'">'+ideas.map(function(idea,j){
@@ -231,7 +243,8 @@ function renderResults(d,url){
   }).join("");
 
   var hooksHTML=(d.viralHooks||[]).map(function(h,i){
-    return '<div class="hcard"><div class="htype">'+esc(h.type)+'</div><div class="htext">'+esc(h.text)+'</div><div class="hwhy">'+esc(h.why)+'</div><button class="cpbtn" onclick="copyText(this,\''+escAttr(h.text)+'\')">Kopyala</button></div>';
+    var txt=escAttr(h.text||"");
+    return '<div class="hcard"><div class="htype">'+esc(h.type)+'</div><div class="htext">'+esc(h.text)+'</div><div class="hwhy">'+esc(h.why)+'</div><button class="cpbtn" onclick="copyText(this,\''+txt+'\')">Kopyala</button></div>';
   }).join("");
 
   var viralHTML=(d.viralTexts||[]).map(function(v){
@@ -271,7 +284,7 @@ function resetApp(){
 }
 
 function esc(s){ if(!s) return ""; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-function escAttr(s){ if(!s) return ""; return String(s).replace(/'/g,"\\'").replace(/\n/g," "); }
+function escAttr(s){ if(!s) return ""; return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\n/g," "); }
 </script>
 </body>
 </html>
