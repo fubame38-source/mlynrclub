@@ -661,7 +661,7 @@ async function startAnalysis() {
       const clean = rawText.replace(/```json|```/g,'').trim();
       parsed = JSON.parse(clean);
     } catch(e) {
-      throw new Error('Analiz sonucu işlenemedi. Tekrar deneyin.');
+      throw new Error('JSON parse hatası: ' + rawText.substring(0, 200));
     }
 
     setTimeout(() => {
