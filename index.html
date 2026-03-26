@@ -655,7 +655,8 @@ async function startAnalysis() {
     });
 
     const data = await response.json();
-    const rawText = data.content.map(i => i.text||'').join('');
+    const anthropicData = data.content ? data : (data.body ? JSON.parse(data.body) : data);
+    const rawText = (anthropicData.content || []).map(i => i.text||'').join('');
     let parsed;
     try {
       const clean = rawText.replace(/```json|```/g,'').trim();
