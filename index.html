@@ -641,61 +641,10 @@ async function startAnalysis() {
   const prompt = buildPrompt(url);
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch("/.netlify/functions/analyze", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 4000,
-        system: `Sen Türkiye'deki markalar için uzmanlaşmış bir sosyal medya stratejisti ve içerik üreticisisin. 
-Verilen web sitesi URL'sini analiz ederek marka hakkında çıkarım yap (URL yapısından, domain adından, sektörden).
-Yanıtını YALNIZCA geçerli JSON olarak döndür, başka hiçbir şey yazma, markdown kullanma.
-JSON yapısı şu şekilde olmalı:
-{
-  "brandName": "marka adı",
-  "sector": "sektör",
-  "shortAnalysis": "3-4 cümle marka analizi",
-  "scores": {
-    "contentScore": 1-100 arası sayı,
-    "viralPotential": 1-100 arası sayı,
-    "socialPresence": 1-100 arası sayı,
-    "growthOpportunity": 1-100 arası sayı
-  },
-  "contentPlan": [
-    { "type": "video|image|carousel|text|story", "title": "...", "desc": "..." },
-    { "type": "...", "title": "...", "desc": "..." },
-    { "type": "...", "title": "...", "desc": "..." },
-    { "type": "...", "title": "...", "desc": "..." }
-  ],
-  "dailyIdeas": {
-    "Pazartesi": [
-      { "title": "...", "desc": "...", "platform": "Instagram|TikTok|YouTube|X", "format": "Reels|Story|Post|Video" },
-      { "title": "...", "desc": "...", "platform": "...", "format": "..." },
-      { "title": "...", "desc": "...", "platform": "...", "format": "..." },
-      { "title": "...", "desc": "...", "platform": "...", "format": "..." },
-      { "title": "...", "desc": "...", "platform": "...", "format": "..." }
-    ],
-    "Salı": [ ...5 fikir... ],
-    "Çarşamba": [ ...5 fikir... ],
-    "Perşembe": [ ...5 fikir... ],
-    "Cuma": [ ...5 fikir... ]
-  },
-  "viralHooks": [
-    { "type": "Merak Uyandıran", "text": "hook metni", "why": "neden viral olur" },
-    { "type": "Problem-Çözüm", "text": "hook metni", "why": "neden viral olur" },
-    { "type": "Sosyal Kanıt", "text": "hook metni", "why": "neden viral olur" },
-    { "type": "POV / Hikaye", "text": "hook metni", "why": "neden viral olur" },
-    { "type": "Şok & Gerçek", "text": "hook metni", "why": "neden viral olur" },
-    { "type": "Rakam & Veri", "text": "hook metni", "why": "neden viral olur" }
-  ],
-  "viralTexts": [
-    { "platform": "Instagram Caption", "text": "..." },
-    { "platform": "TikTok Açıklaması", "text": "..." },
-    { "platform": "Reklam Metni (Meta)", "text": "..." }
-  ]
-}`,
-        messages: [{ role: "user", content: prompt }]
-      })
+      body: JSON.stringify({ prompt: buildPrompt(url) })
     });
 
     clearInterval(stepInterval);
