@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarkaIQ — Türk Markalar İçin AI Stratejist</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;700;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #18181f;
+    --border: #2a2a38;
+    --accent: #ff4d00;
+    --accent2: #ff8c42;
+    --gold: #f5c842;
+    --text: #f0eff8;
+    --muted: #7a7a96;
+    --success: #2ecc71;
+    --card-bg: rgba(255,255,255,0.03);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* BG NOISE */
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events:none; z-index:0; opacity:.4;
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    text-align: center;
+    z-index:1;
+  }
+  .hero::before {
+    content:'';
+    position:absolute;
+    top:-200px; left:50%; transform:translateX(-50%);
+    width:700px; height:700px;
+    background: radial-gradient(ellipse, rgba(255,77,0,0.15) 0%, transparent 70%);
+    pointer-events:none;
+  }
+
+  .badge {
+    display: inline-flex; align-items:center; gap:8px;
+    background: rgba(255,77,0,0.1);
+    border: 1px solid rgba(255,77,0,0.3);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 32px;
+    font-family:'DM Sans',sans-serif;
+    font-weight:500;
+  }
+  .badge span { width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(0.8)} }
+
+  h1 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(36px, 7vw, 80px);
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 20px;
+  }
+  h1 .accent { color: var(--accent); }
+  h1 .outline {
+    -webkit-text-stroke: 1px rgba(240,239,248,0.3);
+    color: transparent;
+  }
+
+  .subtitle {
+    font-size: clamp(15px, 2vw, 18px);
+    color: var(--muted);
+    max-width: 540px;
+    line-height: 1.7;
+    margin-bottom: 48px;
+    font-weight:300;
+  }
+
+  /* INPUT SECTION */
+  .input-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    width: 100%;
+    max-width: 620px;
+    position: relative;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+  }
+  .input-card::before {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:1px;
+    background: linear-gradient(90deg, transparent, rgba(255,77,0,0.5), transparent);
+  }
+
+  .input-label {
+    font-size: 12px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:12px;
+    display:block;
+    font-weight:500;
+  }
+
+  .input-row {
+    display:flex; gap:12px; align-items:stretch;
+  }
+
+  .url-input {
+    flex:1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 15px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .url-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255,77,0,0.15);
+  }
+  .url-input::placeholder { color: var(--muted); }
+
+  .analyze-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 12px;
+    padding: 14px 28px;
+    font-family: 'Unbounded', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    white-space:nowrap;
+    transition: transform .15s, box-shadow .15s, background .15s;
+    position:relative; overflow:hidden;
+  }
+  .analyze-btn::before {
+    content:'';
+    position:absolute; inset:0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+  }
+  .analyze-btn:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(255,77,0,0.4); }
+  .analyze-btn:active { transform:translateY(0); }
+  .analyze-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+  .hint {
+    margin-top: 14px;
+    font-size:13px;
+    color:var(--muted);
+    text-align:center;
+  }
+  .hint a { color:var(--accent2); text-decoration:none; }
+
+  /* LOADER */
+  #loader {
+    display:none;
+    padding: 60px 24px;
+    text-align:center;
+    max-width:620px;
+    margin: 0 auto;
+    z-index:1;
+    position:relative;
+  }
+  .loader-orb {
+    width:80px; height:80px;
+    border-radius:50%;
+    margin: 0 auto 28px;
+    background: conic-gradient(from 0deg, var(--accent), var(--accent2), var(--gold), var(--accent));
+    animation: spin 1.4s linear infinite;
+    position:relative;
+  }
+  .loader-orb::after {
+    content:'';
+    position:absolute; inset:4px;
+    border-radius:50%;
+    background:var(--bg);
+  }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .loader-steps { list-style:none; text-align:left; margin-top:24px; }
+  .loader-steps li {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size:14px; color:var(--muted);
+    display:flex; align-items:center; gap:12px;
+    transition: color .3s;
+  }
+  .loader-steps li.done { color:var(--success); }
+  .loader-steps li.active { color:var(--text); }
+  .step-dot {
+    width:8px; height:8px; border-radius:50%;
+    background:var(--border); flex-shrink:0;
+    transition:background .3s;
+  }
+  li.done .step-dot { background:var(--success); }
+  li.active .step-dot { background:var(--accent); animation:pulse 1s infinite; }
+
+  /* RESULTS */
+  #results {
+    display:none;
+    max-width:900px;
+    margin:0 auto;
+    padding: 0 24px 80px;
+    position:relative; z-index:1;
+  }
+
+  .results-header {
+    text-align:center;
+    padding: 48px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom:40px;
+  }
+  .results-header h2 {
+    font-family:'Unbounded',sans-serif;
+    font-size: clamp(22px,4vw,36px);
+    font-weight:700;
+    margin-bottom:8px;
+  }
+  .brand-url-tag {
+    display:inline-block;
+    background:rgba(255,77,0,0.1);
+    border:1px solid rgba(255,77,0,0.25);
+    border-radius:100px;
+    padding:4px 14px;
+    font-size:13px;
+    color:var(--accent2);
+  }
+
+  /* SCORE ROW */
+  .score-row {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+    gap:16px;
+    margin-bottom:40px;
+  }
+  .score-card {
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:24px 20px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .score-card::before {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:2px;
+  }
+  .score-card.orange::before { background:var(--accent); }
+  .score-card.gold::before { background:var(--gold); }
+  .score-card.blue::before { background:#4da6ff; }
+  .score-card.green::before { background:var(--success); }
+
+  .score-num {
+    font-family:'Unbounded',sans-serif;
+    font-size:40px;
+    font-weight:900;
+    line-height:1;
+    margin-bottom:6px;
+  }
+  .score-card.orange .score-num { color:var(--accent); }
+  .score-card.gold .score-num { color:var(--gold); }
+  .score-card.blue .score-num { color:#4da6ff; }
+  .score-card.green .score-num { color:var(--success); }
+  .score-label { font-size:12px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; font-weight:500; }
+
+  /* SECTIONS */
+  .section {
+    margin-bottom:36px;
+  }
+  .section-title {
+    font-family:'Unbounded',sans-serif;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:16px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .section-title::after {
+    content:'';
+    flex:1; height:1px;
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  /* ANALYSIS CARD */
+  .analysis-card {
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:28px;
+    line-height:1.8;
+    font-size:15px;
+    color:#ccc;
+  }
+  .analysis-card strong { color:var(--text); }
+
+  /* CONTENT PLAN */
+  .plan-grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+    gap:16px;
+  }
+  .plan-item {
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:22px;
+    cursor:pointer;
+    transition:border-color .2s, transform .2s, box-shadow .2s;
+    position:relative; overflow:hidden;
+  }
+  .plan-item:hover {
+    border-color:var(--accent);
+    transform:translateY(-3px);
+    box-shadow:0 12px 30px rgba(255,77,0,0.1);
+  }
+  .plan-item-tag {
+    font-size:10px;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    font-weight:700;
+    padding:3px 10px;
+    border-radius:100px;
+    display:inline-block;
+    margin-bottom:12px;
+  }
+  .tag-video { background:rgba(255,77,0,0.15); color:var(--accent2); }
+  .tag-image { background:rgba(77,166,255,0.15); color:#4da6ff; }
+  .tag-carousel { background:rgba(245,200,66,0.15); color:var(--gold); }
+  .tag-text { background:rgba(46,204,113,0.15); color:var(--success); }
+  .tag-story { background:rgba(180,77,255,0.15); color:#b44dff; }
+
+  .plan-item h4 { font-size:15px; font-weight:600; margin-bottom:6px; }
+  .plan-item p { font-size:13px; color:var(--muted); line-height:1.6; }
+
+  /* DAILY IDEAS */
+  .day-tabs {
+    display:flex; gap:8px; margin-bottom:20px;
+    overflow-x:auto; padding-bottom:4px;
+  }
+  .day-tab {
+    background:transparent;
+    border:1px solid var(--border);
+    border-radius:100px;
+    padding:8px 18px;
+    font-family:'DM Sans',sans-serif;
+    font-size:13px;
+    color:var(--muted);
+    cursor:pointer;
+    white-space:nowrap;
+    transition:all .2s;
+  }
+  .day-tab.active {
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+    font-weight:600;
+  }
+  .day-ideas { display:none; }
+  .day-ideas.active { display:flex; flex-direction:column; gap:12px; }
+
+  .idea-row {
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px 22px;
+    display:flex; align-items:flex-start; gap:16px;
+    transition:border-color .2s;
+  }
+  .idea-row:hover { border-color:rgba(255,77,0,0.4); }
+  .idea-num {
+    width:32px; height:32px; flex-shrink:0;
+    background:rgba(255,77,0,0.1);
+    border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Unbounded',sans-serif;
+    font-size:12px;
+    font-weight:700;
+    color:var(--accent);
+  }
+  .idea-content h5 { font-size:14px; font-weight:600; margin-bottom:4px; }
+  .idea-content p { font-size:13px; color:var(--muted); line-height:1.6; }
+  .idea-meta {
+    display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;
+  }
+  .meta-chip {
+    font-size:11px;
+    padding:2px 10px;
+    border-radius:100px;
+    border:1px solid var(--border);
+    color:var(--muted);
+  }
+
+  /* HOOKS */
+  .hooks-grid {
+    display:grid;
+    grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+    gap:16px;
+  }
+  .hook-card {
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:24px;
+    position:relative;
+    overflow:hidden;
+    transition:transform .2s,box-shadow .2s;
+  }
+  .hook-card:hover { transform:translateY(-2px); box-shadow:0 10px 24px rgba(0,0,0,0.4); }
+  .hook-card::before {
+    content:'❝';
+    position:absolute; top:16px; right:20px;
+    font-size:48px;
+    color:rgba(255,77,0,0.08);
+    font-family:serif;
+    line-height:1;
+  }
+  .hook-type {
+    font-size:10px; font-weight:700;
+    letter-spacing:2px; text-transform:uppercase;
+    color:var(--accent); margin-bottom:12px;
+  }
+  .hook-text {
+    font-size:15px; line-height:1.65;
+    font-weight:500;
+  }
+  .hook-why {
+    margin-top:12px;
+    font-size:12px;
+    color:var(--muted);
+    border-top:1px solid var(--border);
+    padding-top:10px;
+  }
+  .copy-btn {
+    margin-top:12px;
+    background:transparent;
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:6px 14px;
+    font-size:12px;
+    color:var(--muted);
+    cursor:pointer;
+    transition:all .2s;
+    font-family:'DM Sans',sans-serif;
+  }
+  .copy-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .copy-btn.copied { border-color:var(--success); color:var(--success); }
+
+  /* VIRAL TEXTS */
+  .viral-list { display:flex; flex-direction:column; gap:12px; }
+  .viral-item {
+    background:var(--card-bg);
+    border:1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius:0 14px 14px 0;
+    padding:18px 22px;
+  }
+  .viral-platform {
+    font-size:10px; font-weight:700; letter-spacing:2px;
+    text-transform:uppercase; color:var(--accent2);
+    margin-bottom:8px;
+  }
+  .viral-text { font-size:14px; line-height:1.7; }
+
+  /* CTA BOTTOM */
+  .cta-bottom {
+    text-align:center;
+    padding:40px;
+    margin-top:40px;
+    border-top:1px solid var(--border);
+  }
+  .reset-btn {
+    background:transparent;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:12px 28px;
+    font-family:'Unbounded',sans-serif;
+    font-size:12px;
+    font-weight:700;
+    color:var(--muted);
+    cursor:pointer;
+    transition:all .2s;
+    letter-spacing:1px;
+  }
+  .reset-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  /* ANIM */
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(24px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .fade-up { animation: fadeUp .5s ease forwards; }
+  .fade-up-d1 { animation-delay:.1s; opacity:0; }
+  .fade-up-d2 { animation-delay:.2s; opacity:0; }
+  .fade-up-d3 { animation-delay:.3s; opacity:0; }
+  .fade-up-d4 { animation-delay:.4s; opacity:0; }
+  .fade-up-d5 { animation-delay:.5s; opacity:0; }
+
+  .error-msg {
+    background:rgba(255,77,0,0.1);
+    border:1px solid rgba(255,77,0,0.3);
+    border-radius:12px;
+    padding:14px 18px;
+    font-size:14px;
+    color:var(--accent2);
+    margin-top:16px;
+    display:none;
+  }
+
+  @media(max-width:600px) {
+    .input-row { flex-direction:column; }
+    .analyze-btn { width:100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero" id="heroSection">
+  <div class="badge"><span></span> AI Destekli Marka Stratejisti</div>
+  <h1>
+    Markanı<br>
+    <span class="accent">Analiz Et.</span><br>
+    <span class="outline">Viral Ol.</span>
+  </h1>
+  <p class="subtitle">
+    Web siteni gir, yapay zeka markanı incelesin — sana özel içerik stratejisi, viral hooklar ve günlük 5 içerik fikri üretsin.
+  </p>
+
+  <div class="input-card">
+    <label class="input-label">Marka Web Sitesi URL</label>
+    <div class="input-row">
+      <input
+        type="url"
+        class="url-input"
+        id="urlInput"
+        placeholder="https://markaniz.com.tr"
+        value=""
+      />
+      <button class="analyze-btn" id="analyzeBtn" onclick="startAnalysis()">
+        Markamı Analiz Et →
+      </button>
+    </div>
+    <div class="error-msg" id="errorMsg"></div>
+    <p class="hint">Türkiye'deki 500+ markaya özel içerik stratejisi üretildi</p>
+  </div>
+</div>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-orb"></div>
+  <div style="font-family:'Unbounded',sans-serif;font-size:18px;font-weight:700;margin-bottom:8px;">Marka Analiz Ediliyor</div>
+  <div style="color:var(--muted);font-size:14px;margin-bottom:24px;" id="loaderUrl"></div>
+  <ul class="loader-steps" id="loaderSteps">
+    <li id="step1"><div class="step-dot"></div>Web sitesi taranıyor ve içerik okunuyor</li>
+    <li id="step2"><div class="step-dot"></div>Marka kimliği ve ton analizi yapılıyor</li>
+    <li id="step3"><div class="step-dot"></div>Hedef kitle ve rekabet analizi</li>
+    <li id="step4"><div class="step-dot"></div>İçerik stratejisi oluşturuluyor</li>
+    <li id="step5"><div class="step-dot"></div>Viral hooklar ve metinler yazılıyor</li>
+    <li id="step6"><div class="step-dot"></div>5 günlük içerik takvimi hazırlanıyor</li>
+  </ul>
+</div>
+
+<!-- RESULTS -->
+<div id="results"></div>
+
+<script>
+const STEPS = ['step1','step2','step3','step4','step5','step6'];
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function hideError() {
+  document.getElementById('errorMsg').style.display = 'none';
+}
+
+async function startAnalysis() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { showError('Lütfen bir URL girin.'); return; }
+  if (!url.startsWith('http')) { showError('URL https:// ile başlamalı.'); return; }
+  hideError();
+
+  // Show loader
+  document.getElementById('heroSection').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+  const loader = document.getElementById('loader');
+  loader.style.display = 'block';
+  document.getElementById('loaderUrl').textContent = url;
+
+  // Animate steps
+  let stepIdx = 0;
+  const stepInterval = setInterval(() => {
+    if (stepIdx > 0) {
+      const prev = document.getElementById(STEPS[stepIdx-1]);
+      prev.classList.remove('active'); prev.classList.add('done');
+    }
+    if (stepIdx < STEPS.length) {
+      const cur = document.getElementById(STEPS[stepIdx]);
+      cur.classList.add('active');
+      stepIdx++;
+    } else {
+      clearInterval(stepInterval);
+    }
+  }, 900);
+
+  // Build prompt
+  const prompt = buildPrompt(url);
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 4000,
+        system: `Sen Türkiye'deki markalar için uzmanlaşmış bir sosyal medya stratejisti ve içerik üreticisisin. 
+Verilen web sitesi URL'sini analiz ederek marka hakkında çıkarım yap (URL yapısından, domain adından, sektörden).
+Yanıtını YALNIZCA geçerli JSON olarak döndür, başka hiçbir şey yazma, markdown kullanma.
+JSON yapısı şu şekilde olmalı:
+{
+  "brandName": "marka adı",
+  "sector": "sektör",
+  "shortAnalysis": "3-4 cümle marka analizi",
+  "scores": {
+    "contentScore": 1-100 arası sayı,
+    "viralPotential": 1-100 arası sayı,
+    "socialPresence": 1-100 arası sayı,
+    "growthOpportunity": 1-100 arası sayı
+  },
+  "contentPlan": [
+    { "type": "video|image|carousel|text|story", "title": "...", "desc": "..." },
+    { "type": "...", "title": "...", "desc": "..." },
+    { "type": "...", "title": "...", "desc": "..." },
+    { "type": "...", "title": "...", "desc": "..." }
+  ],
+  "dailyIdeas": {
+    "Pazartesi": [
+      { "title": "...", "desc": "...", "platform": "Instagram|TikTok|YouTube|X", "format": "Reels|Story|Post|Video" },
+      { "title": "...", "desc": "...", "platform": "...", "format": "..." },
+      { "title": "...", "desc": "...", "platform": "...", "format": "..." },
+      { "title": "...", "desc": "...", "platform": "...", "format": "..." },
+      { "title": "...", "desc": "...", "platform": "...", "format": "..." }
+    ],
+    "Salı": [ ...5 fikir... ],
+    "Çarşamba": [ ...5 fikir... ],
+    "Perşembe": [ ...5 fikir... ],
+    "Cuma": [ ...5 fikir... ]
+  },
+  "viralHooks": [
+    { "type": "Merak Uyandıran", "text": "hook metni", "why": "neden viral olur" },
+    { "type": "Problem-Çözüm", "text": "hook metni", "why": "neden viral olur" },
+    { "type": "Sosyal Kanıt", "text": "hook metni", "why": "neden viral olur" },
+    { "type": "POV / Hikaye", "text": "hook metni", "why": "neden viral olur" },
+    { "type": "Şok & Gerçek", "text": "hook metni", "why": "neden viral olur" },
+    { "type": "Rakam & Veri", "text": "hook metni", "why": "neden viral olur" }
+  ],
+  "viralTexts": [
+    { "platform": "Instagram Caption", "text": "..." },
+    { "platform": "TikTok Açıklaması", "text": "..." },
+    { "platform": "Reklam Metni (Meta)", "text": "..." }
+  ]
+}`,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+
+    clearInterval(stepInterval);
+    // Mark all done
+    STEPS.forEach(s => {
+      const el = document.getElementById(s);
+      el.classList.remove('active'); el.classList.add('done');
+    });
+
+    const data = await response.json();
+    const rawText = data.content.map(i => i.text||'').join('');
+    let parsed;
+    try {
+      const clean = rawText.replace(/```json|```/g,'').trim();
+      parsed = JSON.parse(clean);
+    } catch(e) {
+      throw new Error('Analiz sonucu işlenemedi. Tekrar deneyin.');
+    }
+
+    setTimeout(() => {
+      loader.style.display = 'none';
+      renderResults(parsed, url);
+    }, 800);
+
+  } catch(err) {
+    clearInterval(stepInterval);
+    loader.style.display = 'none';
+    document.getElementById('heroSection').style.display = 'flex';
+    showError('Analiz sırasında hata oluştu: ' + err.message);
+  }
+}
+
+function buildPrompt(url) {
+  return `Şu URL için marka analizi ve içerik stratejisi oluştur: ${url}
+  
+URL'den marka adını, sektörünü ve hedef kitlesini çıkar. Türkiye pazarına özel, gerçekçi ve uygulanabilir içerik fikirleri üret. Hooklar Türkçe ve viral potansiyelli olsun. Her günlük fikir farklı ve yaratıcı olsun.`;
+}
+
+const DAYS = ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma'];
+let activeDayIdx = 0;
+
+function renderResults(data, url) {
+  const el = document.getElementById('results');
+  el.style.display = 'block';
+
+  const tagMap = { video:'tag-video', image:'tag-image', carousel:'tag-carousel', text:'tag-text', story:'tag-story' };
+  const tagLabel = { video:'📹 Video', image:'🖼 Görsel', carousel:'📎 Carousel', text:'✍️ Yazı', story:'⭕ Story' };
+
+  // Scores
+  const s = data.scores || {};
+  const scoreHTML = `
+    <div class="score-row fade-up fade-up-d1">
+      <div class="score-card orange">
+        <div class="score-num">${s.contentScore||72}</div>
+        <div class="score-label">İçerik Skoru</div>
+      </div>
+      <div class="score-card gold">
+        <div class="score-num">${s.viralPotential||65}</div>
+        <div class="score-label">Viral Potansiyel</div>
+      </div>
+      <div class="score-card blue">
+        <div class="score-num">${s.socialPresence||58}</div>
+        <div class="score-label">Sosyal Varlık</div>
+      </div>
+      <div class="score-card green">
+        <div class="score-num">${s.growthOpportunity||81}</div>
+        <div class="score-label">Büyüme Fırsatı</div>
+      </div>
+    </div>`;
+
+  // Content Plan
+  const planHTML = (data.contentPlan||[]).map(p => `
+    <div class="plan-item">
+      <span class="plan-item-tag ${tagMap[p.type]||'tag-text'}">${tagLabel[p.type]||p.type}</span>
+      <h4>${p.title||''}</h4>
+      <p>${p.desc||''}</p>
+    </div>`).join('');
+
+  // Daily Ideas
+  const dayTabsHTML = DAYS.map((d,i) => `
+    <button class="day-tab ${i===0?'active':''}" onclick="switchDay(${i})">${d}</button>`).join('');
+
+  const dayIdeasHTML = DAYS.map((day, di) => {
+    const ideas = (data.dailyIdeas||{})[day] || [];
+    return `
+      <div class="day-ideas ${di===0?'active':''}" id="dayPanel_${di}">
+        ${ideas.map((idea,j) => `
+          <div class="idea-row">
+            <div class="idea-num">${j+1}</div>
+            <div class="idea-content">
+              <h5>${idea.title||''}</h5>
+              <p>${idea.desc||''}</p>
+              <div class="idea-meta">
+                <span class="meta-chip">${idea.platform||''}</span>
+                <span class="meta-chip">${idea.format||''}</span>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  }).join('');
+
+  // Hooks
+  const hooksHTML = (data.viralHooks||[]).map((h,i) => `
+    <div class="hook-card">
+      <div class="hook-type">${h.type||''}</div>
+      <div class="hook-text">${h.text||''}</div>
+      <div class="hook-why">💡 ${h.why||''}</div>
+      <button class="copy-btn" onclick="copyHook(this,'${escapeForAttr(h.text||'')}')">Kopyala</button>
+    </div>`).join('');
+
+  // Viral Texts
+  const viralHTML = (data.viralTexts||[]).map(v => `
+    <div class="viral-item">
+      <div class="viral-platform">${v.platform||''}</div>
+      <div class="viral-text">${(v.text||'').replace(/\n/g,'<br>')}</div>
+    </div>`).join('');
+
+  el.innerHTML = `
+    <div class="results-header fade-up">
+      <h2>${data.brandName||'Marka'} Analizi Tamamlandı</h2>
+      <span class="brand-url-tag">${url}</span>
+      <p style="margin-top:12px;color:var(--muted);font-size:14px;">Sektör: <strong style="color:var(--text)">${data.sector||'—'}</strong></p>
+    </div>
+
+    ${scoreHTML}
+
+    <div class="section fade-up fade-up-d2">
+      <div class="section-title">🔍 Marka Analizi</div>
+      <div class="analysis-card">${data.shortAnalysis||''}</div>
+    </div>
+
+    <div class="section fade-up fade-up-d3">
+      <div class="section-title">📋 İçerik Stratejisi</div>
+      <div class="plan-grid">${planHTML}</div>
+    </div>
+
+    <div class="section fade-up fade-up-d4">
+      <div class="section-title">📅 Günlük 5 İçerik Fikri</div>
+      <div class="day-tabs">${dayTabsHTML}</div>
+      ${dayIdeasHTML}
+    </div>
+
+    <div class="section fade-up fade-up-d5">
+      <div class="section-title">🔥 Viral Hooklar</div>
+      <div class="hooks-grid">${hooksHTML}</div>
+    </div>
+
+    <div class="section fade-up fade-up-d5">
+      <div class="section-title">✍️ Viral Metinler</div>
+      <div class="viral-list">${viralHTML}</div>
+    </div>
+
+    <div class="cta-bottom">
+      <button class="reset-btn" onclick="resetApp()">← Yeni Marka Analiz Et</button>
+    </div>
+  `;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function switchDay(idx) {
+  DAYS.forEach((_,i) => {
+    document.querySelectorAll('.day-tab')[i].classList.toggle('active', i===idx);
+    const panel = document.getElementById(`dayPanel_${i}`);
+    if(panel) panel.classList.toggle('active', i===idx);
+  });
+}
+
+function copyHook(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Kopyalandı';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Kopyala'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function escapeForAttr(str) {
+  return str.replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/\n/g,' ');
+}
+
+function resetApp() {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('heroSection').style.display = 'flex';
+  document.getElementById('urlInput').value = '';
+  // Reset loader steps
+  STEPS.forEach(s => {
+    const el = document.getElementById(s);
+    el.classList.remove('active','done');
+  });
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+// Enter key
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('urlInput').addEventListener('keydown', e => {
+    if(e.key==='Enter') startAnalysis();
+  });
+});
+</script>
+</body>
+</html>
