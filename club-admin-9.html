@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MLYNRClub Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#f5f4f0;--s1:#fff;--s2:#f9f8f6;--s3:#f0eeeb;
+  --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.14);
+  --text:#1a1916;--text2:#5a5854;--text3:#9a9894;
+  --green:#1a7a4a;--green-dim:rgba(26,122,74,.07);--green-border:rgba(26,122,74,.18);
+  --red:#dc2626;--red-dim:rgba(220,38,38,.07);--red-border:rgba(220,38,38,.2);
+  --gold:#b45309;--gold-dim:rgba(180,83,9,.07);
+  --font:'Plus Jakarta Sans',sans-serif;--mono:'JetBrains Mono',monospace;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.05);
+  --shadow2:0 2px 8px rgba(0,0,0,.1),0 8px 32px rgba(0,0,0,.07);
+  --r:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* AUTH */
+#auth-wrap{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.auth-card{background:var(--s1);border:1px solid var(--border2);border-radius:20px;padding:32px;width:100%;max-width:360px;box-shadow:var(--shadow2);text-align:center}
+.auth-title{font-size:20px;font-weight:800;letter-spacing:-.04em;margin-bottom:4px}
+.auth-title span{color:var(--red)}
+.auth-sub{font-size:11px;color:var(--text3);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:24px}
+.auth-inp{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;margin-bottom:12px;transition:all .2s}
+.auth-inp:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-dim)}
+.auth-go{width:100%;background:var(--text);color:var(--bg);font-family:var(--font);font-size:14px;font-weight:700;padding:12px;border-radius:10px;border:none;cursor:pointer;transition:all .2s}
+.auth-go:hover{background:var(--green)}
+.auth-err{font-size:12px;color:var(--red);margin-top:8px;font-family:var(--mono)}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:50;height:54px;background:rgba(245,244,240,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:12px;box-shadow:0 1px 0 var(--border)}
+.nav-logo{font-size:15px;font-weight:800;letter-spacing:-.04em}
+.nav-logo span{color:var(--red)}
+.nav-badge{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--red);background:var(--red-dim);border:1px solid var(--red-border);padding:3px 10px;border-radius:999px}
+.nav-r{margin-left:auto;display:flex;align-items:center;gap:8px}
+.nav-btn{background:transparent;border:1px solid var(--border2);border-radius:8px;padding:5px 14px;font-size:11px;font-family:var(--mono);color:var(--text3);cursor:pointer;transition:all .2s;letter-spacing:.04em}
+.nav-btn:hover{color:var(--text);border-color:var(--border2)}
+.nav-btn.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+
+/* WRAP */
+.wrap{max-width:1000px;margin:0 auto;padding:72px 24px 60px}
+
+/* SECTION TABS */
+.sec-tabs{display:flex;gap:3px;background:var(--s1);padding:3px;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow);width:fit-content;margin-bottom:24px}
+.sec-tab{padding:8px 20px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--text3);transition:all .2s}
+.sec-tab.active{background:var(--text);color:var(--bg)}
+
+/* SECTIONS */
+.section{display:none}
+.section.active{display:block}
+
+/* SIGNAL EDIT */
+.signal-edit-card{background:var(--s1);border:1px solid var(--green-border);border-radius:16px;padding:24px;box-shadow:var(--shadow);margin-bottom:20px}
+.field-label{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;display:block}
+.field-input{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;transition:all .2s;margin-bottom:14px}
+.field-input:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-dim)}
+.field-textarea{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:13px 14px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;resize:vertical;min-height:100px;line-height:1.6;transition:all .2s;margin-bottom:14px}
+.field-textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-dim)}
+.save-btn{background:var(--green);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;padding:11px 28px;border-radius:10px;border:none;cursor:pointer;transition:all .2s}
+.save-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.save-ok{font-family:var(--mono);font-size:11px;color:var(--green);margin-left:12px;opacity:0;transition:opacity .3s}
+
+/* STATS ROW */
+.admin-stats{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+.astat{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:14px 20px;flex:1;min-width:100px;box-shadow:var(--shadow)}
+.astat-val{font-size:26px;font-weight:800;letter-spacing:-.05em;color:var(--text)}
+.astat-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-top:4px}
+
+/* POSTS TABLE */
+.posts-filter{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.filter-inp{background:var(--s1);border:1px solid var(--border2);border-radius:10px;padding:8px 14px;color:var(--text);font-family:var(--font);font-size:12px;outline:none;width:220px;transition:all .2s}
+.filter-inp:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-dim)}
+.filter-sel{background:var(--s1);border:1px solid var(--border2);border-radius:10px;padding:8px 12px;color:var(--text);font-family:var(--font);font-size:12px;outline:none;cursor:pointer}
+.posts-count{font-family:var(--mono);font-size:11px;color:var(--text3);margin-left:auto}
+
+.post-row{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:10px;transition:all .2s;box-shadow:var(--shadow)}
+.post-row:hover{border-color:var(--border2)}
+.post-row.flagged{border-color:var(--red-border);background:var(--red-dim)}
+.pr-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.pr-av{width:32px;height:32px;border-radius:50%;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+.pr-info{flex:1}
+.pr-name{font-size:13px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.pr-meta{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px}
+.pr-type{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:999px;border:1px solid var(--border);color:var(--text3)}
+.pr-content{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:12px;white-space:pre-wrap;word-break:break-word}
+.pr-img{width:120px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);margin-bottom:12px;cursor:pointer}
+.pr-actions{display:flex;gap:8px;align-items:center}
+.btn-del{background:var(--red-dim);border:1px solid var(--red-border);color:var(--red);font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:8px;cursor:pointer;transition:all .2s;letter-spacing:.04em}
+.btn-del:hover{background:var(--red);color:#fff}
+.pr-reactions{font-family:var(--mono);font-size:10px;color:var(--text3);margin-left:auto}
+
+/* USERS */
+.user-row{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:14px 18px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow)}
+.u-av{width:36px;height:36px;border-radius:50%;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+.u-info{flex:1}
+.u-name{font-size:13px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+.u-email{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:2px}
+.u-stats{text-align:right}
+.u-posts{font-size:13px;font-weight:700;color:var(--text)}
+.u-lbl{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+
+/* LOADING */
+.loading{padding:32px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--text3)}
+.empty{padding:40px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--text3);background:var(--s1);border:1px dashed var(--border2);border-radius:14px}
+
+/* LIGHTBOX */
+.lbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;display:none;align-items:center;justify-content:center;cursor:zoom-out}
+.lbox.show{display:flex}
+.lbox img{max-width:90vw;max-height:90vh;border-radius:10px}
+
+/* UPLOAD AREA */
+.ann-upload-area{
+  border:2px dashed var(--border2);
+  border-radius:12px;
+  padding:0;
+  margin-bottom:14px;
+  overflow:hidden;
+  transition:border-color .2s;
+}
+.ann-drop-btn{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 18px;
+  cursor:pointer;
+  background:var(--s2);
+  width:100%;
+  transition:background .2s;
+}
+.ann-drop-btn:hover{background:var(--s3,#e8e8e8);}
+.ann-drop-icon{
+  width:36px;height:36px;border-radius:9px;
+  background:var(--s1);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.ann-drop-text{flex:1;}
+.ann-drop-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.ann-drop-sub{font-size:11px;color:var(--text3);font-family:var(--mono);}
+.ann-preview-box{
+  background:var(--s1);
+  border-top:1px solid var(--border);
+  padding:12px;
+  position:relative;
+}
+.ann-preview-box video,
+.ann-preview-box img{
+  width:100%;border-radius:8px;
+  max-height:220px;object-fit:cover;
+  display:block;
+}
+.ann-preview-remove{
+  position:absolute;top:20px;right:20px;
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(0,0,0,.65);border:none;
+  color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;transition:background .15s;
+}
+.ann-preview-remove:hover{background:#dc2626;}
+.ann-upload-progress{
+  padding:10px 14px;
+  font-size:11px;color:var(--text3);
+  font-family:var(--mono);
+  border-top:1px solid var(--border);
+  background:var(--s2);
+  display:none;
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-title">MLYNR<span>Club</span></div>
+    <div class="auth-sub">Admin Paneli</div>
+    <input class="auth-inp" type="email" id="a-email" placeholder="Admin email" onkeydown="if(event.key==='Enter')adminLogin()">
+    <input class="auth-inp" type="password" id="a-pass" placeholder="Şifre" onkeydown="if(event.key==='Enter')adminLogin()">
+    <button class="auth-go" onclick="adminLogin()">Giriş →</button>
+    <div class="auth-err" id="a-err" style="display:none"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+  <nav class="nav">
+    <div class="nav-logo">MLYNR<span>Admin</span></div>
+    <div class="nav-badge">ADMIN</div>
+    <div class="nav-r">
+      <button class="nav-btn" onclick="window.open('club.html','_blank')">← Club'a Dön</button>
+      <button class="nav-btn" onclick="adminLogout()">Çıkış</button>
+    </div>
+  </nav>
+
+  <div class="wrap">
+
+    <!-- STATS -->
+    <div class="admin-stats" id="admin-stats">
+      <div class="astat"><div class="astat-val" id="as-posts">—</div><div class="astat-lbl">Toplam Post</div></div>
+      <div class="astat"><div class="astat-val" id="as-users">—</div><div class="astat-lbl">Toplam Üye</div></div>
+      <div class="astat"><div class="astat-val" id="as-today">—</div><div class="astat-lbl">Bugün</div></div>
+      <div class="astat"><div class="astat-val" id="as-sales">—</div><div class="astat-lbl">Satış Postu</div></div>
+    </div>
+
+    <!-- SECTION TABS -->
+    <div class="sec-tabs">
+      <button class="sec-tab active" onclick="showSection('posts',this)">📋 Tüm Postlar</button>
+      <button class="sec-tab" onclick="showSection('pending',this)">⏳ Onay Bekleyenler <span id="pending-count" style="background:#b45309;color:#fff;border-radius:999px;padding:1px 7px;font-size:10px;margin-left:4px">0</span></button>
+      <button class="sec-tab" onclick="showSection('signal',this)">📡 Canberk Sinyali</button>
+      <button class="sec-tab" onclick="showSection('ann',this)">📌 Duyurular <span id="ann-count" style="background:#6366f1;color:#fff;border-radius:999px;padding:1px 7px;font-size:10px;margin-left:4px">0</span></button>
+      <button class="sec-tab" onclick="showSection('users',this)">👥 Üyeler</button>
+      <button class="sec-tab" onclick="showSection('members',this)">✅ Üye Onayı <span id="members-count" style="background:#1a7a4a;color:#fff;border-radius:999px;padding:1px 7px;font-size:10px;margin-left:4px">0</span></button>
+      <button class="sec-tab" onclick="showSection('codes',this)">🔑 Davet Kodları</button>
+    </div>
+
+    <!-- PENDING SECTION -->
+    <div class="section" id="sec-pending">
+      <div id="pending-list"><div class="loading">Yükleniyor...</div></div>
+    </div>
+
+    <!-- POSTS SECTION -->
+    <div class="section active" id="sec-posts">
+      <div class="posts-filter">
+        <input class="filter-inp" type="text" id="search-inp" placeholder="İsim veya içerik ara..." oninput="filterPosts()">
+        <select class="filter-sel" id="type-filter" onchange="filterPosts()">
+          <option value="all">Tüm Tipler</option>
+          <option value="milestone">🎉 İlk Satış</option>
+          <option value="sale">💰 Satış</option>
+          <option value="product">📦 Ürün</option>
+          <option value="question">❓ Soru</option>
+          <option value="motivation">🔥 Motivasyon</option>
+        </select>
+        <span class="posts-count" id="posts-count"></span>
+        <button onclick="deleteAllPosts()" style="background:#7f1d1d;border:1px solid #991b1b;color:#fca5a5;font-family:var(--mono);font-size:11px;padding:6px 16px;border-radius:8px;cursor:pointer;font-weight:600;margin-left:auto;">🗑 Tümünü Sil</button>
+      </div>
+      <div id="posts-list"><div class="loading">Yükleniyor...</div></div>
+    </div>
+
+    <!-- SIGNAL SECTION -->
+    <!-- DUYURULAR -->
+    <div class="section" id="sec-ann">
+      <div class="signal-edit-card">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:16px;">Yeni Duyuru Ekle</div>
+        <span class="field-label">Başlık</span>
+        <input class="field-input" id="ann-title-inp" placeholder="Duyuru başlığı...">
+        <span class="field-label">İçerik</span>
+        <textarea class="field-textarea" id="ann-body-inp" placeholder="Duyuru içeriği..."></textarea>
+        <span class="field-label">Görsel veya Video (opsiyonel)</span>
+        <div class="ann-upload-area" id="ann-upload-area">
+          <input type="file" id="ann-file-inp" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm" style="display:none" onchange="onAnnFileSelect(this)">
+          <div class="ann-drop-btn" id="ann-drop" onclick="document.getElementById('ann-file-inp').click()">
+            <div class="ann-drop-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <div class="ann-drop-text">
+              <div class="ann-drop-title">Dosya seç veya sürükle</div>
+              <div class="ann-drop-sub">JPG, PNG, GIF, MP4, MOV · max 200MB</div>
+            </div>
+          </div>
+          <div id="ann-preview-wrap" style="display:none;">
+            <div class="ann-preview-box">
+              <div id="ann-preview-inner"></div>
+              <button class="ann-preview-remove" onclick="clearAnnFile()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="ann-upload-progress" id="ann-upload-status"></div>
+        </div>
+        <button class="save-btn" onclick="addAnnouncement()">Duyuru Ekle →</button>
+        <span class="save-ok" id="ann-save-ok">✓ Eklendi</span>
+      </div>
+      <div id="ann-admin-list"><div class="loading">Yükleniyor...</div></div>
+    </div>
+
+    <div class="section" id="sec-signal">
+      <div class="signal-edit-card">
+        <div style="font-size:15px;font-weight:700;margin-bottom:20px;letter-spacing:-.03em">📡 Bu Haftanın Sinyalini Güncelle</div>
+        <label class="field-label">Başlık</label>
+        <input class="field-input" type="text" id="sig-title-inp" placeholder="Bu hafta ne öğrendik?">
+        <label class="field-label">İçerik</label>
+        <textarea class="field-textarea" id="sig-body-inp" placeholder="Detaylar..."></textarea>
+        <button class="save-btn" onclick="saveSignal()">Kaydet →</button>
+        <span class="save-ok" id="save-ok">✓ Kaydedildi</span>
+      </div>
+      <div style="background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:18px;box-shadow:var(--shadow)">
+        <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:12px">Mevcut Sinyal</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px" id="cur-sig-title">Yükleniyor...</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.6" id="cur-sig-body"></div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:10px" id="cur-sig-date"></div>
+      </div>
+    </div>
+
+    <!-- USERS SECTION -->
+    <!-- MEMBERS SECTION -->
+    <div class="section" id="sec-members">
+      <div class="admin-stats">
+        <div class="astat"><div class="astat-val" id="ms-pending">—</div><div class="astat-lbl">Bekleyen</div></div>
+        <div class="astat"><div class="astat-val" id="ms-approved">—</div><div class="astat-lbl">Onaylı</div></div>
+        <div class="astat"><div class="astat-val" id="ms-total">—</div><div class="astat-lbl">Toplam</div></div>
+      </div>
+      <div id="members-list"><div class="loading">Yükleniyor...</div></div>
+    </div>
+
+    <div class="section" id="sec-users">
+      <div id="users-list"><div class="loading">Yükleniyor...</div></div>
+    </div>
+
+    <!-- DAVET KODLARI -->
+    <div class="section" id="sec-codes">
+      <div class="signal-edit-card">
+        <div style="font-size:13px;font-weight:700;margin-bottom:16px;">Yeni Davet Kodu Ekle</div>
+        <span class="field-label">Kod</span>
+        <input class="field-input" id="code-inp" placeholder="MLYNR-XXXX" style="text-transform:uppercase;letter-spacing:.08em" oninput="this.value=this.value.toUpperCase()">
+        <span class="field-label">Açıklama (opsiyonel)</span>
+        <input class="field-input" id="code-label-inp" placeholder="Örn: Ocak 2026 grubu">
+        <span class="field-label">Maksimum Kullanım</span>
+        <input class="field-input" id="code-max-inp" type="number" value="1" min="1" placeholder="1">
+        <button class="save-btn" onclick="addInviteCode()">Kod Ekle →</button>
+        <span class="save-ok" id="code-save-ok">✓ Eklendi</span>
+      </div>
+      <div id="codes-list"><div class="loading">Yükleniyor...</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lbox" id="lbox" onclick="this.classList.remove('show')">
+  <img id="lbox-img" alt="">
+</div>
+
+<script>
+const SB_URL = 'https://xrelhozqawdseobxqbju.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhyZWxob3pxYXdkc2VvYnhxYmp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNTcxNzksImV4cCI6MjA4ODczMzE3OX0.JbtrF-ymC11M7HM9MhT5_I1hD8e5oOQz0q-d7Ty5E2Q';
+const ADMIN_EMAILS = ['furkan@mlynr.com','canberk@mlynr.com'];
+const R2_WORKER_URL = 'https://mlynr-upload.fubame38.workers.dev/';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+let allPosts = [];
+let allUsers = [];
+
+// ─── AUTH ──────────────────────────────────────────────────────
+async function adminLogin() {
+  var email = document.getElementById('a-email').value.trim();
+  var pass = document.getElementById('a-pass').value;
+  if (!email || !pass) return;
+  var btn = document.querySelector('.auth-go');
+  btn.textContent = '...'; btn.disabled = true;
+  var { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  btn.textContent = 'Giriş →'; btn.disabled = false;
+  if (error) { showErr('Hata: ' + error.message); return; }
+  if (!ADMIN_EMAILS.includes(data.user.email)) {
+    await sb.auth.signOut();
+    showErr('Bu hesabın admin yetkisi yok.');
+    return;
+  }
+  document.getElementById('auth-wrap').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  loadAll();
+}
+function showErr(msg) {
+  var el = document.getElementById('a-err');
+  el.textContent = msg; el.style.display = 'block';
+}
+async function adminLogout() {
+  await sb.auth.signOut();
+  location.reload();
+}
+
+// ─── LOAD ALL ──────────────────────────────────────────────────
+async function loadAll() {
+  await Promise.all([loadPosts(), loadSignal()]);
+  buildUserList();
+  loadMembers();
+  loadAdminAnnouncements();
+  loadInviteCodes();
+}
+
+async function loadPosts() {
+  var { data } = await sb.from('club_posts')
+    .select('*, club_reactions(emoji), club_comments(id)')
+    .order('created_at', { ascending: false })
+    .limit(200);
+  allPosts = data || [];
+  renderPosts(allPosts);
+  renderPending();
+  updateAdminStats(allPosts);
+}
+
+function renderPending() {
+  var pending = allPosts.filter(p => !p.approved);
+  document.getElementById('pending-count').textContent = pending.length;
+  var list = document.getElementById('pending-list');
+  if (!pending.length) { list.innerHTML = '<div class="empty">✅ Onay bekleyen post yok.</div>'; return; }
+  list.innerHTML = pending.map(p => {
+    var typeLabel = {milestone:'🎉 İlk Satış',sale:'💰 Satış',product:'📦 Ürün',question:'❓ Soru',motivation:'🔥 Motivasyon'}[p.post_type]||p.post_type;
+    var imgHtml = p.image_url ? `<img class="pr-img" src="${esc(p.image_url)}" onclick="document.getElementById('lbox-img').src='${esc(p.image_url)}';document.getElementById('lbox').classList.add('show')">` : '';
+    return `<div class="post-row" id="pnd-${p.id}" style="border-color:rgba(180,83,9,.25)">
+      <div class="pr-head">
+        <div class="pr-av" style="background:${avColor(p.user_name||'U')}">${(p.user_name||'U').charAt(0).toUpperCase()}</div>
+        <div class="pr-info">
+          <div class="pr-name">${esc(p.user_name||'?')}</div>
+          <div class="pr-meta">${esc(p.user_email||'')} · ${timeAgo(p.created_at)}</div>
+        </div>
+        <div class="pr-type">${typeLabel}</div>
+      </div>
+      <div class="pr-content">${esc(p.content)}</div>
+      ${imgHtml}
+      <div class="pr-actions">
+        <button style="background:rgba(26,122,74,.1);border:1px solid rgba(26,122,74,.25);color:#1a7a4a;font-family:var(--mono);font-size:11px;padding:6px 16px;border-radius:8px;cursor:pointer;font-weight:600;transition:all .2s" onclick="approvePost('${p.id}')">✓ Onayla</button>
+        <button class="btn-del" onclick="adminDelete('${p.id}')">✗ Reddet</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function deleteAllPosts() {
+  var count = allPosts.length;
+  if (count === 0) { alert('Silinecek post yok.'); return; }
+  if (!confirm('Tüm ' + count + ' post silinecek! Bu işlem geri alınamaz. Emin misin?')) return;
+  var second = confirm('Son onay: ' + count + ' post kalıcı olarak silinecek.');
+  if (!second) return;
+  var btn = event.target;
+  btn.textContent = '...'; btn.disabled = true;
+  var ids = allPosts.map(p => p.id);
+  var { error } = await sb.from('club_posts').delete().in('id', ids);
+  btn.textContent = '🗑 Tümünü Sil'; btn.disabled = false;
+  if (error) { alert('Hata: ' + error.message); return; }
+  allPosts = [];
+  renderPosts([]);
+  document.getElementById('posts-count').textContent = '0 post';
+  alert('✓ Tüm postlar silindi.');
+}
+
+async function approvePost(postId) {
+  var { error } = await sb.from('club_posts').update({ approved: true }).eq('id', postId);
+  if (error) { alert('Hata: ' + error.message); return; }
+  var idx = allPosts.findIndex(p => p.id === postId);
+  if (idx > -1) allPosts[idx].approved = true;
+  var el = document.getElementById('pnd-'+postId);
+  if (el) { el.style.opacity='.4'; setTimeout(()=>el.remove(),300); }
+  var cnt = allPosts.filter(p=>!p.approved).length;
+  document.getElementById('pending-count').textContent = cnt;
+  renderPosts(allPosts);
+}
+
+async function loadSignal() {
+  var { data } = await sb.from('club_signal').select('*').eq('id',1).single();
+  if (data) {
+    document.getElementById('sig-title-inp').value = data.title;
+    document.getElementById('sig-body-inp').value = data.body;
+    document.getElementById('cur-sig-title').textContent = data.title;
+    document.getElementById('cur-sig-body').textContent = data.body;
+    document.getElementById('cur-sig-date').textContent = 'Son güncelleme: ' + timeAgo(data.updated_at);
+  }
+}
+
+// ─── RENDER POSTS ──────────────────────────────────────────────
+function renderPosts(posts) {
+  var list = document.getElementById('posts-list');
+  document.getElementById('posts-count').textContent = posts.length + ' post';
+  if (!posts.length) { list.innerHTML = '<div class="empty">Post bulunamadı.</div>'; return; }
+  list.innerHTML = posts.map(p => {
+    var reactions = p.club_reactions || [];
+    var comments = p.club_comments || [];
+    var fire = reactions.filter(r=>r.emoji==='🔥').length;
+    var power = reactions.filter(r=>r.emoji==='💪').length;
+    var love = reactions.filter(r=>r.emoji==='❤️').length;
+    var typeLabel = {milestone:'🎉 İlk Satış',sale:'💰 Satış',product:'📦 Ürün',question:'❓ Soru',motivation:'🔥 Motivasyon'}[p.post_type]||p.post_type;
+    var imgHtml = p.image_url ? `<img class="pr-img" src="${esc(p.image_url)}" onclick="document.getElementById('lbox-img').src='${esc(p.image_url)}';document.getElementById('lbox').classList.add('show')">` : '';
+    var saleHtml = '';
+    if (p.sale_price||p.sale_profit||p.sale_orders) {
+      saleHtml = `<div style="background:rgba(26,122,74,.07);border:1px solid rgba(26,122,74,.2);border-radius:8px;padding:8px 14px;margin-bottom:10px;display:flex;gap:20px;font-family:var(--mono);font-size:11px;color:var(--green)">`;
+      if(p.sale_price) saleHtml += `<span>💰 ${esc(p.sale_price)}</span>`;
+      if(p.sale_profit) saleHtml += `<span>📈 ${esc(p.sale_profit)}</span>`;
+      if(p.sale_orders) saleHtml += `<span>📦 ${esc(p.sale_orders)}</span>`;
+      saleHtml += '</div>';
+    }
+    return `<div class="post-row" id="pr-${p.id}">
+      <div class="pr-head">
+        <div class="pr-av" style="background:${avColor(p.user_name||'U')}">${(p.user_name||'U').charAt(0).toUpperCase()}</div>
+        <div class="pr-info">
+          <div class="pr-name">${esc(p.user_name||'?')}</div>
+          <div class="pr-meta">${esc(p.user_email||'')} · ${timeAgo(p.created_at)}</div>
+        </div>
+        <div class="pr-type">${typeLabel}</div>
+      </div>
+      <div class="pr-content">${esc(p.content)}</div>
+      ${saleHtml}${imgHtml}
+      <div class="pr-actions">
+        <button class="btn-del" onclick="adminDelete('${p.id}')">🗑 Sil</button>
+        <span class="pr-reactions">🔥${fire} 💪${power} ❤️${love} · 💬${comments.length}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── FILTER ────────────────────────────────────────────────────
+function filterPosts() {
+  var q = document.getElementById('search-inp').value.toLowerCase();
+  var type = document.getElementById('type-filter').value;
+  var filtered = allPosts.filter(p => {
+    var matchType = type === 'all' || p.post_type === type;
+    var matchQ = !q || (p.content||'').toLowerCase().includes(q) || (p.user_name||'').toLowerCase().includes(q) || (p.user_email||'').toLowerCase().includes(q);
+    return matchType && matchQ;
+  });
+  renderPosts(filtered);
+}
+
+// ─── DELETE ────────────────────────────────────────────────────
+async function adminDelete(postId) {
+  if (!confirm('Bu postu silmek istediğinden emin misin?')) return;
+  var el = document.getElementById('pr-'+postId);
+  if (el) { el.style.opacity = '.4'; el.style.pointerEvents = 'none'; }
+  // Admin silme — tüm postları silebilir (RLS'e ek policy lazım)
+  var { error } = await sb.from('club_posts').delete().eq('id', postId);
+  if (error) {
+    if (el) { el.style.opacity = '1'; el.style.pointerEvents = ''; }
+    alert('Hata: ' + error.message + '\n\nNot: Supabase\'de admin delete policy\'si gerekiyor. SQL\'i çalıştır.');
+    return;
+  }
+  allPosts = allPosts.filter(p => p.id !== postId);
+  if (el) el.remove();
+  document.getElementById('posts-count').textContent = allPosts.length + ' post';
+  updateAdminStats(allPosts);
+}
+
+// ─── SIGNAL ────────────────────────────────────────────────────
+async function saveSignal() {
+  var title = document.getElementById('sig-title-inp').value.trim();
+  var body = document.getElementById('sig-body-inp').value.trim();
+  if (!title || !body) { alert('Başlık ve içerik doldur!'); return; }
+  var btn = document.querySelector('.save-btn');
+  btn.textContent = '...'; btn.disabled = true;
+  var { error } = await sb.from('club_signal').upsert({ id:1, title, body, updated_at: new Date().toISOString() });
+  btn.textContent = 'Kaydet →'; btn.disabled = false;
+  if (error) { alert('Hata: ' + error.message); return; }
+  document.getElementById('cur-sig-title').textContent = title;
+  document.getElementById('cur-sig-body').textContent = body;
+  document.getElementById('cur-sig-date').textContent = 'Son güncelleme: az önce';
+  var ok = document.getElementById('save-ok');
+  ok.style.opacity = '1';
+  setTimeout(() => ok.style.opacity = '0', 2500);
+}
+
+
+// ─── MEMBERS ───────────────────────────────────────────────────
+async function loadMembers() {
+  var { data, error } = await sb.from('club_members').select('*').order('created_at', { ascending: false });
+  if (error) { document.getElementById('members-list').innerHTML = '<div class="empty">Hata: '+error.message+'</div>'; return; }
+  var pending = (data||[]).filter(m => !m.approved);
+  var approved = (data||[]).filter(m => m.approved);
+  document.getElementById('ms-pending').textContent = pending.length;
+  document.getElementById('ms-approved').textContent = approved.length;
+  document.getElementById('ms-total').textContent = (data||[]).length;
+  document.getElementById('members-count').textContent = pending.length;
+  var list = document.getElementById('members-list');
+  if (!data || !data.length) { list.innerHTML = '<div class="empty">Henüz üye yok.</div>'; return; }
+  list.innerHTML = data.map(m => `
+    <div class="user-row" id="mr-${m.id}" style="${!m.approved ? 'border-color:rgba(180,83,9,.3);background:rgba(180,83,9,.04)' : ''}">
+      <div class="u-av" style="background:${avColor(m.name||'U')}">${(m.name||'U').charAt(0).toUpperCase()}</div>
+      <div class="u-info">
+        <div class="u-name">${esc(m.name||'?')}</div>
+        <div class="u-email">${esc(m.email||'')} · ${new Date(m.created_at).toLocaleDateString('tr-TR')}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${!m.approved
+          ? `<button class="save-btn" style="padding:7px 16px;font-size:12px" onclick="approveMember('${m.id}','${esc(m.email||'')}')">✓ Onayla</button>
+             <button class="btn-del" onclick="rejectMember('${m.id}','${esc(m.email||'')}')">✗ Reddet</button>`
+          : `<span style="font-family:var(--mono);font-size:11px;color:var(--green)">✓ Onaylı</span>
+             <button class="btn-del" onclick="rejectMember('${m.id}','${esc(m.email||'')}')">Kaldır</button>`
+        }
+      </div>
+    </div>`).join('');
+}
+
+async function approveMember(id, email) {
+  var { error } = await sb.from('club_members').update({ approved: true }).eq('id', id);
+  if (error) { alert('Hata: ' + error.message); return; }
+  loadMembers();
+}
+
+async function rejectMember(id, email) {
+  if (!confirm('"'+email+'" üyesini reddet/kaldır?')) return;
+  // club_members'dan sil
+  var { error } = await sb.from('club_members').delete().eq('id', id);
+  if (error) { alert('Hata: ' + error.message); return; }
+  // UI'dan kaldır
+  var el = document.getElementById('mr-'+id);
+  if (el) el.remove();
+  loadMembers();
+}
+
+
+// ─── DUYURULAR ──────────────────────────────────────────────────
+async function loadAdminAnnouncements() {
+  var { data } = await sb.from('club_announcements').select('*').order('created_at', { ascending: false });
+  var cnt = document.getElementById('ann-count');
+  if (cnt) cnt.textContent = (data||[]).length;
+  var list = document.getElementById('ann-admin-list');
+  if (!list) return;
+  if (!data || !data.length) { list.innerHTML = '<div class="empty">Henüz duyuru yok.</div>'; return; }
+  list.innerHTML = data.map(a => `
+    <div class="post-row" id="ann-${a.id}">
+      <div class="pr-head">
+        <div class="pr-av" style="background:#6366f1;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;">📌</div>
+        <div class="pr-info">
+          <div class="pr-name">${esc(a.title)}</div>
+          <div class="pr-meta">${timeAgo(a.created_at)}</div>
+        </div>
+      </div>
+      <div class="pr-content">${esc(a.body||'')}</div>
+      ${a.media_url && a.media_type==='image' ? `<img src="${esc(a.media_url)}" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px;border:1px solid var(--border)">` : ''}
+      ${a.media_url && a.media_type==='video' ? `<video src="${esc(a.media_url)}" controls style="width:100%;border-radius:10px;margin-bottom:10px;max-height:220px;border:1px solid var(--border)"></video>` : ''}
+      <div class="pr-actions">
+        <button class="btn-del" onclick="deleteAnnouncement('${a.id}')">🗑 Sil</button>
+      </div>
+    </div>`).join('');
+}
+
+var annSelectedFile = null;
+var annSelectedType = null; // 'image' or 'video'
+
+function onAnnFileSelect(input) {
+  var file = input.files[0];
+  if (!file) return;
+  annSelectedFile = file;
+  annSelectedType = file.type.startsWith('video/') ? 'video' : 'image';
+  var preview = document.getElementById('ann-preview-wrap');
+  var inner = document.getElementById('ann-preview-inner');
+  var drop = document.getElementById('ann-drop');
+  drop.style.display = 'none';
+  preview.style.display = 'block';
+  document.getElementById('ann-upload-area').style.borderColor = 'var(--green)';
+  if (annSelectedType === 'video') {
+    var url = URL.createObjectURL(file);
+    inner.innerHTML = '<video src="'+url+'" controls style="width:100%;border-radius:10px;max-height:240px;border:1px solid var(--border2)"></video>';
+  } else {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      inner.innerHTML = '<img src="'+e.target.result+'" style="width:100%;border-radius:10px;max-height:200px;object-fit:cover;border:1px solid var(--border2)">';
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function clearAnnFile() {
+  annSelectedFile = null;
+  annSelectedType = null;
+  document.getElementById('ann-file-inp').value = '';
+  document.getElementById('ann-preview-wrap').style.display = 'none';
+  document.getElementById('ann-preview-inner').innerHTML = '';
+  document.getElementById('ann-drop').style.display = 'flex';
+  document.getElementById('ann-upload-area').style.borderColor = '';
+}
+
+async function addAnnouncement() {
+  var title = document.getElementById('ann-title-inp').value.trim();
+  var body = document.getElementById('ann-body-inp').value.trim();
+  if (!title) { alert('Başlık doldur!'); return; }
+  var btn = document.querySelector('#sec-ann .save-btn');
+  btn.textContent = '...'; btn.disabled = true;
+
+  var mediaUrl = null;
+  var mediaType = null;
+
+  if (annSelectedFile) {
+    var status = document.getElementById('ann-upload-status');
+    status.style.display = 'block';
+    status.textContent = '⏳ Yükleniyor...';
+    try {
+      var { data: sessionData } = await sb.auth.getSession();
+      var sessionToken = sessionData?.session?.access_token || '';
+      var authHeaders = { 'Authorization': 'Bearer ' + sessionToken };
+
+      var uploadedUrl = null;
+
+      if (annSelectedFile.size > 50 * 1024 * 1024) {
+        // Büyük dosya (50MB+) → presign al, direkt PUT ile yükle
+        status.textContent = '⏳ Bağlantı kuruluyor...';
+        var presignRes = await fetch(R2_WORKER_URL + 'presign', {
+          method: 'POST',
+          headers: { ...authHeaders, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: annSelectedFile.name,
+            contentType: annSelectedFile.type,
+            folder: 'announcements'
+          })
+        });
+        if (!presignRes.ok) throw new Error('Presign hatası: ' + await presignRes.text());
+        var { uploadUrl, publicUrl, uploadToken } = await presignRes.json();
+
+        // İlerleme takibi ile yükle
+        status.textContent = '⏳ Yükleniyor (0%)...';
+        await new Promise((resolve, reject) => {
+          var xhr = new XMLHttpRequest();
+          xhr.open('PUT', uploadUrl);
+          xhr.setRequestHeader('Content-Type', annSelectedFile.type);
+          xhr.setRequestHeader('X-Upload-Token', uploadToken || '');
+          xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+              var pct = Math.round(e.loaded / e.total * 100);
+              status.textContent = '⏳ Yükleniyor (' + pct + '%)...';
+            }
+          };
+          xhr.onload = function() {
+            if (xhr.status >= 200 && xhr.status < 300) resolve();
+            else reject(new Error('Yükleme hatası: ' + xhr.status));
+          };
+          xhr.onerror = () => reject(new Error('Ağ hatası'));
+          xhr.send(annSelectedFile);
+        });
+        uploadedUrl = publicUrl;
+
+      } else {
+        // Küçük dosya → FormData ile yükle
+        var fd = new FormData();
+        fd.append('file', annSelectedFile);
+        var res = await fetch(R2_WORKER_URL, {
+          method: 'POST',
+          headers: authHeaders,
+          body: fd
+        });
+        if (!res.ok) throw new Error(await res.text());
+        var result = await res.json();
+        uploadedUrl = result.url;
+      }
+
+      mediaUrl = uploadedUrl;
+      mediaType = annSelectedType;
+      status.style.display = 'none';
+      document.getElementById('ann-upload-area').style.borderColor = 'var(--green)';
+    } catch(e) {
+      status.textContent = 'Yükleme hatası: ' + e.message;
+      btn.textContent = 'Duyuru Ekle →'; btn.disabled = false;
+      return;
+    }
+  }
+
+  var { error } = await sb.from('club_announcements').insert({
+    title, body, media_url: mediaUrl, media_type: mediaType,
+    created_at: new Date().toISOString()
+  });
+  btn.textContent = 'Duyuru Ekle →'; btn.disabled = false;
+  if (error) { alert('Hata: ' + error.message); return; }
+  document.getElementById('ann-title-inp').value = '';
+  document.getElementById('ann-body-inp').value = '';
+  clearAnnFile();
+  var ok = document.getElementById('ann-save-ok');
+  ok.style.opacity = '1'; setTimeout(() => ok.style.opacity = '0', 2500);
+  loadAdminAnnouncements();
+}
+
+async function deleteAnnouncement(id) {
+  if (!confirm('Bu duyuruyu silmek istediğine emin misin?')) return;
+  var el = document.getElementById('ann-'+id);
+  if (el) { el.style.opacity = '.4'; el.style.pointerEvents = 'none'; }
+  var { error } = await sb.from('club_announcements').delete().eq('id', id);
+  if (error) { alert('Hata: ' + error.message); if(el){el.style.opacity='1';el.style.pointerEvents='';} return; }
+  if (el) el.remove();
+  loadAdminAnnouncements();
+}
+
+// ─── BAN USER ──────────────────────────────────────────────────
+async function banUser(userId, email) {
+  if (!confirm(`"${email}" kullanıcısını banlamak istediğine emin misin?\n\nTüm postları silinecek.`)) return;
+  // Kullanıcının tüm postlarını sil
+  var { error } = await sb.from('club_posts').delete().eq('user_id', userId);
+  if (error) { alert('Post silme hatası: ' + error.message); return; }
+  // Kullanıcının yorumlarını sil
+  await sb.from('club_comments').delete().eq('user_id', userId);
+  // Local listeden kaldır
+  allPosts = allPosts.filter(p => p.user_id !== userId);
+  renderPosts(allPosts);
+  buildUserList();
+  updateAdminStats(allPosts);
+  alert(`✓ ${email} banlandı. Tüm içerikleri silindi.\n\nNot: Supabase Authentication > Users'dan da hesabı silmeni öneririz.`);
+}
+
+// ─── USERS ─────────────────────────────────────────────────────
+function buildUserList() {
+  var userMap = {};
+  allPosts.forEach(p => {
+    if (!userMap[p.user_id]) userMap[p.user_id] = { name: p.user_name, email: p.user_email, userId: p.user_id, posts: 0, sales: 0 };
+    userMap[p.user_id].posts++;
+    if (p.post_type==='sale'||p.post_type==='milestone') userMap[p.user_id].sales++;
+  });
+  var users = Object.values(userMap).sort((a,b)=>b.posts-a.posts);
+  document.getElementById('as-users').textContent = users.length;
+  var list = document.getElementById('users-list');
+  if (!users.length) { list.innerHTML = '<div class="empty">Henüz üye yok.</div>'; return; }
+  list.innerHTML = users.map(u => `
+    <div class="user-row" id="ur-${btoa(u.email||'x').replace(/=/g,'')}">
+      <div class="u-av" style="background:${avColor(u.name||'U')}">${(u.name||'U').charAt(0).toUpperCase()}</div>
+      <div class="u-info">
+        <div class="u-name">${esc(u.name||'?')}</div>
+        <div class="u-email">${esc(u.email||'')}</div>
+      </div>
+      <div class="u-stats" style="display:flex;align-items:center;gap:12px">
+        <div style="text-align:right">
+          <div class="u-posts">${u.posts} post · ${u.sales} satış</div>
+          <div class="u-lbl">Aktivite</div>
+        </div>
+        <button class="btn-del" onclick="banUser('${esc(u.userId)}','${esc(u.email||'')}')">🚫 Banla</button>
+      </div>
+    </div>`).join('');
+}
+
+// ─── STATS ─────────────────────────────────────────────────────
+function updateAdminStats(posts) {
+  var today = new Date().toDateString();
+  document.getElementById('as-posts').textContent = posts.length;
+  document.getElementById('as-today').textContent = posts.filter(p=>new Date(p.created_at).toDateString()===today).length;
+  document.getElementById('as-sales').textContent = posts.filter(p=>p.post_type==='sale'||p.post_type==='milestone').length;
+}
+
+// ─── DAVET KODLARI ─────────────────────────────────────────────
+async function loadInviteCodes() {
+  var { data } = await sb.from('club_invite_codes').select('*').order('created_at', { ascending: false });
+  var list = document.getElementById('codes-list');
+  if (!data || !data.length) { list.innerHTML = '<div class="empty">Henüz kod yok.</div>'; return; }
+  list.innerHTML = data.map(c => {
+    var pct = c.max_uses > 0 ? Math.round((c.use_count||0)/c.max_uses*100) : 0;
+    var statusColor = c.used ? 'var(--red)' : (c.use_count >= c.max_uses && c.max_uses > 0) ? 'var(--red)' : 'var(--green)';
+    var statusText = c.used || (c.max_uses > 0 && c.use_count >= c.max_uses) ? '✗ Dolu' : '✓ Aktif';
+    return `<div class="post-row" id="code-${c.id}">
+      <div class="pr-head">
+        <div class="pr-av" style="background:#6366f1;font-size:12px">🔑</div>
+        <div class="pr-info">
+          <div class="pr-name" style="font-family:var(--mono);letter-spacing:.08em">${esc(c.code)}</div>
+          <div class="pr-meta">${esc(c.label||'—')} · ${c.use_count||0}/${c.max_uses} kullanım · ${timeAgo(c.created_at)}</div>
+        </div>
+        <div style="font-family:var(--mono);font-size:11px;color:${statusColor};font-weight:700">${statusText}</div>
+      </div>
+      <div class="pr-actions">
+        <button class="btn-del" onclick="deleteInviteCode('${c.id}')">🗑 Sil</button>
+        <button style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);color:#6366f1;font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:8px;cursor:pointer" onclick="copyCode('${esc(c.code)}')">📋 Kopyala</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function addInviteCode() {
+  var code = document.getElementById('code-inp').value.trim().toUpperCase();
+  var label = document.getElementById('code-label-inp').value.trim();
+  var maxUses = parseInt(document.getElementById('code-max-inp').value) || 1;
+  if (!code || code.length < 4) { alert('Geçerli bir kod gir (min 4 karakter)'); return; }
+  var btn = document.querySelector('#sec-codes .save-btn');
+  btn.textContent = '...'; btn.disabled = true;
+  var { error } = await sb.from('club_invite_codes').insert({ code, label, max_uses: maxUses, use_count: 0, used: false });
+  btn.textContent = 'Kod Ekle →'; btn.disabled = false;
+  if (error) { alert('Hata: ' + error.message); return; }
+  document.getElementById('code-inp').value = '';
+  document.getElementById('code-label-inp').value = '';
+  document.getElementById('code-max-inp').value = '1';
+  var ok = document.getElementById('code-save-ok');
+  ok.style.opacity = '1'; setTimeout(() => ok.style.opacity = '0', 2500);
+  loadInviteCodes();
+}
+
+async function deleteInviteCode(id) {
+  if (!confirm('Bu kodu silmek istediğine emin misin?')) return;
+  var el = document.getElementById('code-'+id);
+  if (el) { el.style.opacity = '.4'; el.style.pointerEvents = 'none'; }
+  var { error } = await sb.from('club_invite_codes').delete().eq('id', id);
+  if (error) { alert('Hata: ' + error.message); if(el){el.style.opacity='1';el.style.pointerEvents='';} return; }
+  if (el) el.remove();
+}
+
+function copyCode(code) {
+  navigator.clipboard.writeText(code).then(() => alert('Kopyalandı: ' + code));
+}
+
+// ─── SECTIONS ──────────────────────────────────────────────────
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.sec-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  el.classList.add('active');
+  if (id === 'codes') loadInviteCodes();
+}
+
+// ─── HELPERS ───────────────────────────────────────────────────
+function esc(str) { if(!str)return''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function timeAgo(ts) {
+  var d=new Date(ts),now=new Date(),diff=Math.floor((now-d)/1000);
+  if(diff<60)return'az önce';if(diff<3600)return Math.floor(diff/60)+' dk önce';
+  if(diff<86400)return Math.floor(diff/3600)+' sa önce';
+  return Math.floor(diff/86400)+' gün önce';
+}
+var AV=['#1a7a4a','#1d4ed8','#b45309','#7c3aed','#dc2626','#0891b2'];
+function avColor(name){var i=0;for(var c of(name||''))i+=c.charCodeAt(0);return AV[i%AV.length];}
+
+// ─── SESSION ───────────────────────────────────────────────────
+(async function(){
+  var {data}=await sb.auth.getSession();
+  if(data?.session?.user && ADMIN_EMAILS.includes(data.session.user.email)){
+    document.getElementById('auth-wrap').style.display='none';
+    document.getElementById('app').style.display='block';
+    loadAll();
+  }
+})();
+</script>
+</body>
+</html>
