@@ -2122,10 +2122,10 @@ async function doSendMagicLink() {
 
 // ─── AUTH STATE CHANGE (magic link dönüşü) ─────────────────────
 sb.auth.onAuthStateChange(async function(event, session) {
-  if ((event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') && session) {
+  if (event === 'SIGNED_IN' && session) {
     var user = session.user;
-    // Eğer zaten app açıksa bir şey yapma
-    if (document.getElementById('app').style.display !== 'none') return;
+    // Eğer zaten app içindeyse (normal kullanım) bir şey yapma
+    if (me && me.id === user.id) return;
     if (ADMIN_EMAILS.includes(user.email)) { onLogin(user); return; }
     var profileRes = await sb.from('club_members').select('approved, pass_set').eq('user_id', user.id).single();
     var profile = profileRes ? profileRes.data : null;
@@ -2133,7 +2133,6 @@ sb.auth.onAuthStateChange(async function(event, session) {
       showPendingScreen(user); return;
     }
     if (!profile.pass_set) {
-      // Şifre belirleme ekranını göster
       document.getElementById('auth-screen').style.display = 'flex';
       document.getElementById('auth-login-form').style.display = 'none';
       document.getElementById('auth-magic-form').style.display = 'none';
@@ -3369,9 +3368,18 @@ function toggleTheme() {
     var u = data.session.user;
     if (ADMIN_EMAILS.includes(u.email)) { onLogin(u); }
     else {
-      var { data: prof } = await sb.from('club_members').select('approved').eq('user_id', u.id).single();
-      if (prof?.approved) { onLogin(u); }
-      else { showPendingScreen(u); }
+      var { data: prof } = await sb.from('club_members').select('approved, pass_set').eq('user_id', u.id).single();
+      if (!prof || !prof.approved) { showPendingScreen(u); }
+      else if (!prof.pass_set) {
+        // Onaylı ama şifre belirlenmemiş — magic link ile döndü
+        document.getElementById('auth-screen').style.display = 'flex';
+        document.getElementById('auth-login-form').style.display = 'none';
+        document.getElementById('auth-magic-form').style.display = 'none';
+        document.getElementById('auth-signup-form').style.display = 'none';
+        document.getElementById('auth-setpass-form').style.display = 'block';
+        document.querySelectorAll('.auth-tab').forEach(t => t.style.display = 'none');
+      }
+      else { onLogin(u); }
     }
   } else {
     document.getElementById('auth-screen').style.display = 'flex';
