@@ -1439,21 +1439,6 @@ body:not(.light-mode) .ann-card{background:#141420;border-color:rgba(99,102,241,
         <div class="auth-field"><label>E-posta</label><input class="auth-input" type="email" id="login-email" placeholder="sen@email.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
         <div class="auth-field"><label>Şifre</label><input class="auth-input" type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
         <button class="auth-btn" id="login-btn" onclick="doLogin()">Giriş Yap →</button>
-        <div style="text-align:center;margin-top:12px;">
-          <button onclick="showMagicLinkForm()" style="background:none;border:none;color:#666;font-size:12px;font-family:var(--font);cursor:pointer;text-decoration:underline;padding:0;">Şifreni mi unuttun?</button>
-        </div>
-      </div>
-      <div id="auth-magic-form" style="display:none">
-        <div style="text-align:center;margin-bottom:16px;">
-          <div style="font-size:20px;margin-bottom:6px;">✉️</div>
-          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">Giriş Linki Gönder</div>
-          <div style="font-size:12px;color:#666;line-height:1.5;">Email adresine tek kullanımlık giriş linki göndereceğiz. Linke tıklayınca içeri gireceksin.</div>
-        </div>
-        <div class="auth-field"><label>E-posta</label><input class="auth-input" type="email" id="magic-email" placeholder="sen@email.com" onkeydown="if(event.key==='Enter')doSendMagicLink()"></div>
-        <button class="auth-btn" id="magic-btn" onclick="doSendMagicLink()">Giriş Linki Gönder →</button>
-        <div style="text-align:center;margin-top:12px;">
-          <button onclick="hideMagicLinkForm()" style="background:none;border:none;color:#666;font-size:12px;font-family:var(--font);cursor:pointer;text-decoration:underline;padding:0;">← Geri dön</button>
-        </div>
       </div>
       <div id="auth-signup-form" style="display:none">
         <div class="auth-field"><label>Davet Kodu</label><input class="auth-input" type="text" id="signup-code" placeholder="MLYNR-XXXX" style="letter-spacing:.08em;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')doSignup()"></div>
@@ -2087,69 +2072,6 @@ async function showPendingScreen(user) {
   }, 30000);
 }
 
-// ─── MAGIC LINK (ŞİFRE UNUTMA / İLK GİRİŞ) ────────────────────
-function showMagicLinkForm() {
-  document.getElementById('auth-login-form').style.display = 'none';
-  document.getElementById('auth-magic-form').style.display = 'block';
-  hideAuthMsg();
-  // Login email varsa magic forma taşı
-  var loginEmail = document.getElementById('login-email').value.trim();
-  if (loginEmail) document.getElementById('magic-email').value = loginEmail;
-}
-function hideMagicLinkForm() {
-  document.getElementById('auth-magic-form').style.display = 'none';
-  document.getElementById('auth-login-form').style.display = 'block';
-  hideAuthMsg();
-}
-async function doSendMagicLink() {
-  var email = document.getElementById('magic-email').value.trim().toLowerCase();
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    showAuthMsg('Geçerli bir email gir'); return;
-  }
-  var btn = document.getElementById('magic-btn');
-  btn.textContent = '...'; btn.disabled = true;
-  var { error } = await sb.auth.signInWithOtp({
-    email,
-    options: { shouldCreateUser: false }
-  });
-  btn.textContent = 'Giriş Linki Gönder →'; btn.disabled = false;
-  if (error) {
-    showAuthMsg('Hata: ' + error.message); return;
-  }
-  showAuthMsg('✅ Link gönderildi! Email kutunu kontrol et.', true);
-  document.getElementById('magic-email').value = '';
-}
-
-// ─── MAGIC LINK DÖNÜŞÜ — URL'de token varsa yakala ────────────
-(async function() {
-  var hash = window.location.hash;
-  if (hash && hash.includes('access_token')) {
-    // Supabase session'ı URL'den otomatik parse eder, kısa bekle
-    await new Promise(r => setTimeout(r, 500));
-    var { data } = await sb.auth.getSession();
-    if (data?.session?.user) {
-      var user = data.session.user;
-      // URL'i temizle
-      window.history.replaceState(null, '', window.location.pathname);
-      if (ADMIN_EMAILS.includes(user.email)) { onLogin(user); return; }
-      var profileRes = await sb.from('club_members').select('approved, pass_set').eq('user_id', user.id).single();
-      var profile = profileRes ? profileRes.data : null;
-      if (!profile || !profile.approved) { showPendingScreen(user); return; }
-      if (!profile.pass_set) {
-        document.getElementById('auth-screen').style.display = 'flex';
-        document.getElementById('auth-login-form').style.display = 'none';
-        document.getElementById('auth-magic-form').style.display = 'none';
-        document.getElementById('auth-signup-form').style.display = 'none';
-        document.getElementById('auth-setpass-form').style.display = 'block';
-        document.querySelectorAll('.auth-tab').forEach(t => t.style.display = 'none');
-        hideAuthMsg();
-        return;
-      }
-      onLogin(user);
-    }
-  }
-})();
-
 async function doPendingLogout() {
   if (pendingCheckInterval) { clearInterval(pendingCheckInterval); pendingCheckInterval = null; }
   await sb.auth.signOut();
@@ -2159,9 +2081,7 @@ async function doPendingLogout() {
 async function doLogout() {
   await sb.auth.signOut(); me = null; myName = '';
   document.getElementById('app').style.display = 'none';
-  // Auth ekranını sıfırla
   document.getElementById('auth-login-form').style.display = 'block';
-  document.getElementById('auth-magic-form').style.display = 'none';
   document.getElementById('auth-signup-form').style.display = 'none';
   document.getElementById('auth-setpass-form').style.display = 'none';
   document.querySelectorAll('.auth-tab').forEach(t => t.style.display = '');
@@ -3367,26 +3287,16 @@ function toggleTheme() {
 
 // ─── SESSION ───────────────────────────────────────────────────
 (async function(){
-  // Magic link token varsa URL handler halleder, burası çalışmasın
-  if (window.location.hash && window.location.hash.includes('access_token')) return;
   var {data}=await sb.auth.getSession();
   if(data?.session?.user){
     var u = data.session.user;
-    if (ADMIN_EMAILS.includes(u.email)) { onLogin(u); }
-    else {
-      var { data: prof } = await sb.from('club_members').select('approved, pass_set').eq('user_id', u.id).single();
-      if (!prof || !prof.approved) { showPendingScreen(u); }
-      else if (!prof.pass_set) {
-        // Onaylı ama şifre belirlenmemiş — magic link ile döndü
-        document.getElementById('auth-screen').style.display = 'flex';
-        document.getElementById('auth-login-form').style.display = 'none';
-        document.getElementById('auth-magic-form').style.display = 'none';
-        document.getElementById('auth-signup-form').style.display = 'none';
-        document.getElementById('auth-setpass-form').style.display = 'block';
-        document.querySelectorAll('.auth-tab').forEach(t => t.style.display = 'none');
-      }
-      else { onLogin(u); }
-    }
+    if (ADMIN_EMAILS.includes(u.email)) { onLogin(u); return; }
+    var { data: prof } = await sb.from('club_members').select('approved, pass_set').eq('user_id', u.id).single();
+    if (!prof || !prof.approved) { showPendingScreen(u); return; }
+    if (prof.pass_set) { onLogin(u); return; }
+    // Onaylı ama pass_set=false: bu olmamalı normalde ama güvenlik için sign out yap
+    await sb.auth.signOut();
+    document.getElementById('auth-screen').style.display = 'flex';
   } else {
     document.getElementById('auth-screen').style.display = 'flex';
   }
