@@ -1444,18 +1444,9 @@ body:not(.light-mode) .ann-card{background:#141420;border-color:rgba(99,102,241,
         <div class="auth-field"><label>Davet Kodu</label><input class="auth-input" type="text" id="signup-code" placeholder="MLYNR-XXXX" style="letter-spacing:.08em;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')doSignup()"></div>
         <div class="auth-field"><label>Adın Soyadın</label><input class="auth-input" type="text" id="signup-name" placeholder="Adın Soyadın" onkeydown="if(event.key==='Enter')doSignup()"></div>
         <div class="auth-field"><label>E-posta</label><input class="auth-input" type="email" id="signup-email" placeholder="sen@email.com" onkeydown="if(event.key==='Enter')doSignup()"></div>
+        <div class="auth-field"><label>Şifre</label><input class="auth-input" type="password" id="signup-pass" placeholder="en az 8 karakter" onkeydown="if(event.key==='Enter')doSignup()"></div>
         <button class="auth-btn" id="signup-btn" onclick="doSignup()">Kayıt Ol →</button>
         <div style="margin-top:10px;font-size:11px;color:#555;text-align:center;font-family:var(--mono)">Davet kodunu Canberk'ten al</div>
-      </div>
-      <div id="auth-setpass-form" style="display:none">
-        <div style="text-align:center;margin-bottom:16px;">
-          <div style="font-size:20px;margin-bottom:6px;">&#128272;</div>
-          <div style="font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;">Sifreni Belirle</div>
-          <div style="font-size:12px;color:#666;">Hesabin onaylandi! Artik bir sifre belirle.</div>
-        </div>
-        <div class="auth-field"><label>Yeni Sifre</label><input class="auth-input" type="password" id="setpass-pass" placeholder="en az 8 karakter" onkeydown="if(event.key==='Enter')doSetPass()"></div>
-        <div class="auth-field"><label>Sifre Tekrar</label><input class="auth-input" type="password" id="setpass-pass2" placeholder="sifreni tekrarla" onkeydown="if(event.key==='Enter')doSetPass()"></div>
-        <button class="auth-btn" id="setpass-btn" onclick="doSetPass()">Sifremi Kaydet -></button>
       </div>
       <div id="auth-msg"></div>
     </div>
@@ -1915,21 +1906,10 @@ async function doLogin() {
   // Admin ise direkt gir
   if (ADMIN_EMAILS.includes(data.user.email)) { onLogin(data.user); return; }
   // Onay kontrolü
-  var profileRes = await sb.from('club_members').select('approved, pass_set').eq('user_id', data.user.id).single();
+  var profileRes = await sb.from('club_members').select('approved').eq('user_id', data.user.id).single();
   var profile = profileRes ? profileRes.data : null;
-  if (!profile || profile.approved === false) {
+  if (!profile || !profile.approved) {
     showPendingScreen(data.user);
-    return;
-  }
-  // Onaylı ama şifre belirlememiş mi? (geçici şifreyle giriş yaptı)
-  var passSet = profile.pass_set === true;
-  if (!passSet) {
-    // Şifre belirleme ekranını göster
-    document.getElementById('auth-login-form').style.display = 'none';
-    document.getElementById('auth-signup-form').style.display = 'none';
-    document.getElementById('auth-setpass-form').style.display = 'block';
-    document.querySelectorAll('.auth-tab').forEach(t => t.style.display = 'none');
-    hideAuthMsg();
     return;
   }
   onLogin(data.user);
@@ -1938,10 +1918,12 @@ async function doSignup() {
   var code = (document.getElementById('signup-code').value || '').trim().toUpperCase();
   var name = document.getElementById('signup-name').value.trim();
   var email = document.getElementById('signup-email').value.trim().toLowerCase();
-  if (!code || !name || !email) { showAuthMsg('Tüm alanları doldur'); return; }
+  var pass = document.getElementById('signup-pass').value;
+  if (!code || !name || !email || !pass) { showAuthMsg('Tüm alanları doldur'); return; }
   if (code.length < 4) { showAuthMsg('Geçersiz davet kodu'); return; }
   if (name.length < 2 || name.length > 50) { showAuthMsg('İsim 2-50 karakter olmalı'); return; }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAuthMsg('Geçerli bir email gir'); return; }
+  if (pass.length < 8) { showAuthMsg('Şifre en az 8 karakter olmalı'); return; }
   if (/<|>|script|javascript/i.test(name)) { showAuthMsg('Geçersiz karakter'); return; }
   var btn = document.getElementById('signup-btn');
   btn.textContent = '...'; btn.disabled = true;
@@ -1953,10 +1935,9 @@ async function doSignup() {
     showAuthMsg(checkRes.data?.error || 'Geçersiz veya kullanılmış davet kodu'); return;
   }
 
-  // ADIM 2: Kod geçerli — şimdi auth user oluştur
-  var tmpPass = 'TMP_' + crypto.randomUUID();
+  // ADIM 2: Kod geçerli — şimdi auth user oluştur (gerçek şifreyle)
   var signupRes = await sb.auth.signUp({
-    email, password: tmpPass,
+    email, password: pass,
     options: { data: { full_name: name } }
   });
   btn.textContent = 'Kayıt Ol →'; btn.disabled = false;
@@ -1992,26 +1973,8 @@ async function doSignup() {
   }
 }
 
-// ─── ŞİFRE BELİRLE (onay sonrası ilk giriş) ───────────────────
-async function doSetPass() {
-  var pass = document.getElementById('setpass-pass').value;
-  var pass2 = document.getElementById('setpass-pass2').value;
-  if (!pass || !pass2) { showAuthMsg('Her iki alanı da doldur'); return; }
-  if (pass.length < 8) { showAuthMsg('Şifre en az 8 karakter olmalı'); return; }
-  if (pass !== pass2) { showAuthMsg('Şifreler eşleşmiyor'); return; }
-  var btn = document.getElementById('setpass-btn');
-  btn.textContent = '...'; btn.disabled = true;
-  var { error } = await sb.auth.updateUser({ password: pass });
-  btn.textContent = 'Şifremi Kaydet →'; btn.disabled = false;
-  if (error) { showAuthMsg('Hata: ' + error.message); return; }
-  // Şifre belirlendi, DB'ye işaretle
-  var session = (await sb.auth.getSession()).data.session;
-  if (session) {
-    await sb.from('club_members').update({ pass_set: true }).eq('user_id', session.user.id);
-    onLogin(session.user);
-  }
-}
-
+// ─── ŞİFRE BELİRLE (artık kullanılmıyor ama DB pass_set için kalıyor) ───
+async function doSetPass() {}
 // ─── MOBİL DRAWER ──────────────────────────────────────────────
 async function openDrawer() {
   document.getElementById('mob-drawer').classList.add('open');
@@ -2052,22 +2015,13 @@ async function showPendingScreen(user) {
   // 30 saniyede bir onay kontrolü
   if (pendingCheckInterval) clearInterval(pendingCheckInterval);
   pendingCheckInterval = setInterval(async function() {
-    var checkRes = await sb.from('club_members').select('approved, pass_set').eq('user_id', user.id).single();
+    var checkRes = await sb.from('club_members').select('approved').eq('user_id', user.id).single();
     var member = checkRes ? checkRes.data : null;
     if (member && member.approved) {
       clearInterval(pendingCheckInterval);
       pendingCheckInterval = null;
       document.getElementById('pending-screen').style.display = 'none';
-      // Şifre belirlememiş mi?
-      if (!member.pass_set) {
-        document.getElementById('auth-screen').style.display = 'flex';
-        document.getElementById('auth-login-form').style.display = 'none';
-        document.getElementById('auth-signup-form').style.display = 'none';
-        document.getElementById('auth-setpass-form').style.display = 'block';
-        document.querySelectorAll('.auth-tab').forEach(function(t) { t.style.display = 'none'; });
-      } else {
-        onLogin(user);
-      }
+      onLogin(user);
     }
   }, 30000);
 }
@@ -2083,7 +2037,6 @@ async function doLogout() {
   document.getElementById('app').style.display = 'none';
   document.getElementById('auth-login-form').style.display = 'block';
   document.getElementById('auth-signup-form').style.display = 'none';
-  document.getElementById('auth-setpass-form').style.display = 'none';
   document.querySelectorAll('.auth-tab').forEach(t => t.style.display = '');
   switchAuthTab('login', document.querySelector('.auth-tab'));
   hideAuthMsg();
@@ -3291,12 +3244,9 @@ function toggleTheme() {
   if(data?.session?.user){
     var u = data.session.user;
     if (ADMIN_EMAILS.includes(u.email)) { onLogin(u); return; }
-    var { data: prof } = await sb.from('club_members').select('approved, pass_set').eq('user_id', u.id).single();
-    if (!prof || !prof.approved) { showPendingScreen(u); return; }
-    if (prof.pass_set) { onLogin(u); return; }
-    // Onaylı ama pass_set=false: bu olmamalı normalde ama güvenlik için sign out yap
-    await sb.auth.signOut();
-    document.getElementById('auth-screen').style.display = 'flex';
+    var { data: prof } = await sb.from('club_members').select('approved').eq('user_id', u.id).single();
+    if (prof?.approved) { onLogin(u); }
+    else { showPendingScreen(u); }
   } else {
     document.getElementById('auth-screen').style.display = 'flex';
   }
