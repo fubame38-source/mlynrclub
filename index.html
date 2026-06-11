@@ -2120,31 +2120,35 @@ async function doSendMagicLink() {
   document.getElementById('magic-email').value = '';
 }
 
-// ─── AUTH STATE CHANGE (magic link dönüşü) ─────────────────────
-sb.auth.onAuthStateChange(async function(event, session) {
-  if (event === 'SIGNED_IN' && session) {
-    var user = session.user;
-    // Eğer zaten app içindeyse (normal kullanım) bir şey yapma
-    if (me && me.id === user.id) return;
-    if (ADMIN_EMAILS.includes(user.email)) { onLogin(user); return; }
-    var profileRes = await sb.from('club_members').select('approved, pass_set').eq('user_id', user.id).single();
-    var profile = profileRes ? profileRes.data : null;
-    if (!profile || !profile.approved) {
-      showPendingScreen(user); return;
+// ─── MAGIC LINK DÖNÜŞÜ — URL'de token varsa yakala ────────────
+(async function() {
+  var hash = window.location.hash;
+  if (hash && hash.includes('access_token')) {
+    // Supabase session'ı URL'den otomatik parse eder, kısa bekle
+    await new Promise(r => setTimeout(r, 500));
+    var { data } = await sb.auth.getSession();
+    if (data?.session?.user) {
+      var user = data.session.user;
+      // URL'i temizle
+      window.history.replaceState(null, '', window.location.pathname);
+      if (ADMIN_EMAILS.includes(user.email)) { onLogin(user); return; }
+      var profileRes = await sb.from('club_members').select('approved, pass_set').eq('user_id', user.id).single();
+      var profile = profileRes ? profileRes.data : null;
+      if (!profile || !profile.approved) { showPendingScreen(user); return; }
+      if (!profile.pass_set) {
+        document.getElementById('auth-screen').style.display = 'flex';
+        document.getElementById('auth-login-form').style.display = 'none';
+        document.getElementById('auth-magic-form').style.display = 'none';
+        document.getElementById('auth-signup-form').style.display = 'none';
+        document.getElementById('auth-setpass-form').style.display = 'block';
+        document.querySelectorAll('.auth-tab').forEach(t => t.style.display = 'none');
+        hideAuthMsg();
+        return;
+      }
+      onLogin(user);
     }
-    if (!profile.pass_set) {
-      document.getElementById('auth-screen').style.display = 'flex';
-      document.getElementById('auth-login-form').style.display = 'none';
-      document.getElementById('auth-magic-form').style.display = 'none';
-      document.getElementById('auth-signup-form').style.display = 'none';
-      document.getElementById('auth-setpass-form').style.display = 'block';
-      document.querySelectorAll('.auth-tab').forEach(t => t.style.display = 'none');
-      hideAuthMsg();
-      return;
-    }
-    onLogin(user);
   }
-});
+})();
 
 async function doPendingLogout() {
   if (pendingCheckInterval) { clearInterval(pendingCheckInterval); pendingCheckInterval = null; }
@@ -3363,6 +3367,8 @@ function toggleTheme() {
 
 // ─── SESSION ───────────────────────────────────────────────────
 (async function(){
+  // Magic link token varsa URL handler halleder, burası çalışmasın
+  if (window.location.hash && window.location.hash.includes('access_token')) return;
   var {data}=await sb.auth.getSession();
   if(data?.session?.user){
     var u = data.session.user;
