@@ -2525,7 +2525,7 @@ function renderPost(p) {
   var av = avColor(p.user_name||'U');
   var displayAuthor = formatName(p.user_name||'Anonim');
   var init = displayAuthor.charAt(0).toUpperCase();
-  var savedPhoto = null; // Avatar artık DB'de, post render'da yüklenmez (performans)
+  var savedPhoto = p.avatar_url || null;
   var avHtml = savedPhoto
     ? `<div class="post-av" style="background:${av};padding:0;"><img src="${savedPhoto}" onerror="this.parentElement.innerHTML='${init}';this.parentElement.style.padding='';"></div>`
     : `<div class="post-av" style="background:${av}">${init}</div>`;
@@ -2776,6 +2776,11 @@ async function submitPost() {
   var salePrice = document.getElementById('f-price').value.trim().slice(0,20)||null;
   var saleProfit = document.getElementById('f-profit').value.trim().slice(0,20)||null;
   var saleOrders = document.getElementById('f-orders').value.trim().slice(0,10)||null;
+  var myAvatarUrl = null;
+  try {
+    var avRes = await sb.from('club_members').select('avatar_url').eq('user_id', me.id).single();
+    if (avRes.data) myAvatarUrl = avRes.data.avatar_url;
+  } catch(e) {}
   var isAdminPost = ADMIN_EMAILS.includes(me?.email);
   var post = {
     user_id:me.id, user_name:myName, user_email:me.email,
@@ -2784,6 +2789,7 @@ async function submitPost() {
     sale_profit:saleProfit,
     sale_orders:saleOrders,
     image_url:imageUrl,
+    avatar_url:myAvatarUrl,
     approved: isAdminPost ? true : false
   };
   var {data,error} = await sb.from('club_posts').insert(post).select().single();
@@ -3174,6 +3180,10 @@ async function uploadProfilePhoto(input) {
     if (avImg) { avImg.src = photoUrl; avImg.style.display = 'block'; }
     if (avLetter) avLetter.style.display = 'none';
     await sb.from('club_members').update({ avatar_url: photoUrl }).eq('user_id', me.id);
+    await sb.from('club_posts').update({ avatar_url: photoUrl }).eq('user_id', me.id);
+    // Yüklü postları da güncelle
+    allPosts = allPosts.map(p => p.user_id === me.id ? {...p, avatar_url: photoUrl} : p);
+    renderFeed(); renderHomeFeeds();
     var navAv = document.getElementById('nav-av');
     if (navAv) navAv.innerHTML = '<img src="'+photoUrl+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">';
   } catch(e) {
