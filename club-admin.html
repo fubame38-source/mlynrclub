@@ -574,9 +574,11 @@ async function loadMembers() {
       <div style="display:flex;align-items:center;gap:8px">
         ${!m.approved
           ? `<button class="save-btn" style="padding:7px 16px;font-size:12px" onclick="approveMember('${m.id}','${esc(m.email||'')}')">✓ Onayla</button>
-             <button class="btn-del" onclick="rejectMember('${m.id}','${esc(m.email||'')}')">✗ Reddet</button>`
+             <button class="btn-del" onclick="rejectMember('${m.id}','${esc(m.email||'')}')">✗ Reddet</button>
+             <button onclick="deleteUserFull('${m.id}','${esc(m.email||'')}','${esc(m.user_id||'')}',this)" style="background:#7f1d1d;border:1px solid #991b1b;color:#fca5a5;font-family:var(--mono);font-size:10px;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:600;white-space:nowrap">🗑 Tamamen Sil</button>`
           : `<span style="font-family:var(--mono);font-size:11px;color:var(--green)">✓ Onaylı</span>
-             <button class="btn-del" onclick="rejectMember('${m.id}','${esc(m.email||'')}')">Kaldır</button>`
+             <button class="btn-del" onclick="rejectMember('${m.id}','${esc(m.email||'')}')">Kaldır</button>
+             <button onclick="deleteUserFull('${m.id}','${esc(m.email||'')}','${esc(m.user_id||'')}',this)" style="background:#7f1d1d;border:1px solid #991b1b;color:#fca5a5;font-family:var(--mono);font-size:10px;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:600;white-space:nowrap">🗑 Tamamen Sil</button>`
         }
       </div>
     </div>`).join('');
@@ -599,6 +601,75 @@ async function rejectMember(id, email) {
   loadMembers();
 }
 
+
+// ─── TAM KULLANICI SİL ─────────────────────────────────────────
+async function deleteUserFull(memberId, email, userId, btn) {
+  if (!confirm(
+    '\u26a0\ufe0f "' + email + '" kullan\u0131c\u0131s\u0131 TAMAMEN silinecek!\n\n' +
+    '\u2022 club_members kayd\u0131\n' +
+    '\u2022 T\u00fcm postlar\u0131\n' +
+    '\u2022 T\u00fcm yorumlar\u0131\n' +
+    '\u2022 T\u00fcm reaksiyonlar\u0131\n' +
+    '\u2022 Supabase Auth hesab\u0131\n\n' +
+    'Bu i\u015flem GER\u0130 ALINAMAZ. Devam etmek istiyor musun?'
+  )) return;
+  if (!confirm('Son onay: "' + email + '" kal\u0131c\u0131 olarak siliniyor. Eminsen OK\'e bas.')) return;
+
+  var origText = btn.textContent;
+  btn.textContent = '...'; btn.disabled = true;
+  var errors = [];
+
+  // 1) club_reactions sil
+  if (userId) {
+    var { error: e1 } = await sb.from('club_reactions').delete().eq('user_id', userId);
+    if (e1) errors.push('Reaksiyon: ' + e1.message);
+  }
+  // 2) club_comments sil
+  if (userId) {
+    var { error: e2 } = await sb.from('club_comments').delete().eq('user_id', userId);
+    if (e2) errors.push('Yorum: ' + e2.message);
+  }
+  // 3) club_posts sil
+  if (userId) {
+    var { error: e3 } = await sb.from('club_posts').delete().eq('user_id', userId);
+    if (e3) errors.push('Post: ' + e3.message);
+  }
+  // 4) club_members sil
+  var { error: e4 } = await sb.from('club_members').delete().eq('id', memberId);
+  if (e4) errors.push('\u00dcye kayd\u0131: ' + e4.message);
+
+  // 5) Supabase Auth kullanicisini sil (Edge Function üzerinden)
+  if (userId) {
+    try {
+      var { data: sessionData } = await sb.auth.getSession();
+      var token = sessionData?.session?.access_token || '';
+      var res = await fetch('https://xrelhozqawdseobxqbju.supabase.co/functions/v1/rapid-endpoint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ tool: 'delete-user', userId: userId })
+      });
+      var result = await res.json();
+      if (!res.ok || result.error) errors.push('Auth silme: ' + (result.error || 'Edge Function hatas\u0131'));
+    } catch(e) {
+      errors.push('Auth silme (network): ' + e.message);
+    }
+  }
+
+  btn.textContent = origText; btn.disabled = false;
+
+  if (errors.length) {
+    alert('K\u0131smi hata(lar):\n' + errors.join('\n') + '\n\nGeri kalan veriler silindi.');
+  } else {
+    alert('\u2713 "' + email + '" tamamen silindi. Supabase Auth hesab\u0131 da kald\u0131r\u0131ld\u0131.');
+  }
+
+  if (userId) {
+    allPosts = allPosts.filter(p => p.user_id !== userId);
+    renderPosts(allPosts);
+    updateAdminStats(allPosts);
+  }
+  loadMembers();
+}
 
 // ─── DUYURULAR ──────────────────────────────────────────────────
 async function loadAdminAnnouncements() {
